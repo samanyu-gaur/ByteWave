@@ -1,0 +1,80 @@
+{
+  "colors": {
+    "primary": {
+      "text": "#1A1A2E",
+      "textMuted": "#5C5C6E",
+      "background": "#F8F9FC",
+      "backgroundSecondary": "#FFFFFF"
+    },
+    "accent": {
+      "main": "#6366F1",
+      "hover": "#4F46E5",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "neutral": "#94A3B8"
+    },
+    "skill": {
+      "notStarted": "#94A3B8",
+      "inProgress": "#F59E0B",
+      "mastered": "#10B981"
+    },
+    "border": {
+      "light": "#E2E8F0",
+      "medium": "#CBD5E1"
+    },
+    "recommendation": {
+      "high": "#6366F1",
+      "mid": "#8B5CF6",
+      "low": "#A78BFA"
+    }
+  },
+  "typography": {
+    "fontFamilies": {
+      "headline": "DM Sans",
+      "body": "Inter",
+      "ui": "Inter"
+    },
+    "styles": {
+      "headline1": { "fontFamily": "Inter", "fontSize": 24, "fontWeight": 700, "lineHeight": 32 },
+      "headline2": { "fontFamily": "Inter", "fontSize": 20, "fontWeight": 600, "lineHeight": 28 },
+      "headline3": { "fontFamily": "Inter", "fontSize": 18, "fontWeight": 600, "lineHeight": 24 },
+      "body": { "fontFamily": "Inter", "fontSize": 16, "fontWeight": 400, "lineHeight": 24 },
+      "bodySmall": { "fontFamily": "Inter", "fontSize": 14, "fontWeight": 400, "lineHeight": 20 },
+      "caption": { "fontFamily": "Inter", "fontSize": 12, "fontWeight": 400, "lineHeight": 16 },
+      "label": { "fontFamily": "Inter", "fontSize": 12, "fontWeight": 600, "lineHeight": 16, "letterSpacing": 0.5 },
+      "button": { "fontFamily": "Inter", "fontSize": 16, "fontWeight": 600, "lineHeight": 24 },
+      "scoreNumber": { "fontFamily": "Inter", "fontSize": 20, "fontWeight": 700, "lineHeight": 28 }
+    }
+  },
+  "spacing": {
+    "grid": 8,
+    "paddingHorizontal": 24,
+    "paddingHorizontalCompact": 16,
+    "paddingVertical": 16,
+    "paddingVerticalCompact": 12,
+    "gapSmall": 8,
+    "gapMedium": 12,
+    "gapLarge": 16,
+    "gapSection": 24
+  },
+  "layout": {
+    "frameWidth": 390,
+    "frameHeight": 844,
+    "frameWidthTablet": 768,
+    "frameHeightTablet": 1024,
+    "safeAreaTop": 59,
+    "safeAreaBottom": 34,
+    "topBarHeight": 56,
+    "bottomNavHeight": 64
+  },
+  "radii": {
+    "chip": 12,
+    "card": 12,
+    "button": 10,
+    "input": 10
+  },
+  "shadows": {
+    "card": "0 2px 8px rgba(0,0,0,0.06)",
+    "cardHover": "0 4px 16px rgba(0,0,0,0.08)"
+  }
+}

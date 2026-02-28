@@ -1,0 +1,11 @@
+Found free models: 29
+openrouter/free
+stepfun/step-3.5-flash:free
+arcee-ai/trinity-large-preview:free
+upstage/solar-pro-3:free
+liquid/lfm-2.5-1.2b-thinking:free
+liquid/lfm-2.5-1.2b-instruct:free
+nvidia/nemotron-3-nano-30b-a3b:free
+arcee-ai/trinity-mini:free
+nvidia/nemotron-nano-12b-v2-vl:free
+qwen/qwen3-vl-30b-a3b-thinking

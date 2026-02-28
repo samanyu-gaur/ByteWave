@@ -1,0 +1,4 @@
+Key loaded: True
+Status Code: 404
+{"error":{"message":"No endpoints found for google/gemini-2.5-flash:free.","code":404},"user_id":"user_3AHiGEmGRfUb7MaEovCMjxj2nzp"}
+Error: 404 Client Error: Not Found for url: https://openrouter.ai/api/v1/chat/completions
