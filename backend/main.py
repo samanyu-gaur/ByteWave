@@ -20,6 +20,8 @@ app = FastAPI(title="Physics Platform API")
 
 # Mount media directories
 os.makedirs("media_output/media", exist_ok=True)
+os.makedirs("Manim video", exist_ok=True)
+
 app.mount("/media", StaticFiles(directory="media_output/media"), name="media")
 app.mount("/manim_videos", StaticFiles(directory="Manim video"), name="manim_videos")
 
