@@ -1,0 +1,3 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/dbpendulum/480p15/partial_movie_files/DoublePendulum/1584795214_1157455002_2902315276.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/dbpendulum/480p15/partial_movie_files/DoublePendulum/4072820271_812935599_1498224694.mp4'

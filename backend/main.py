@@ -8,10 +8,20 @@ import models, schemas
 from database import engine, get_db
 from llm_service import llm_service
 
+from fastapi.staticfiles import StaticFiles
+import os
+from agent import generate_animation_plan, generate_manim_code, fix_manim_code
+from manim_runner import run_manim_script, ManimExecutionError
+
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Physics Platform API")
+
+# Mount media directories
+os.makedirs("media_output/media", exist_ok=True)
+app.mount("/media", StaticFiles(directory="media_output/media"), name="media")
+app.mount("/manim_videos", StaticFiles(directory="Manim video"), name="manim_videos")
 
 # Configure CORS for React frontend
 app.add_middleware(
@@ -180,3 +190,54 @@ def get_recommendations(user_id: int, db: Session = Depends(get_db)):
         
     recommendations = llm_service.generate_recommendations(user_progress, cases=[], skills=skills)
     return recommendations
+
+# --- AI ANIMATION CHATBOT API ---
+
+class QuestionRequest(BaseModel):
+    question: str
+    
+class RenderRequest(BaseModel):
+    code: str
+    plan: str
+
+@app.post("/api/generate_plan")
+async def generate_plan(request: QuestionRequest):
+    try:
+        plan = generate_animation_plan(request.question)
+        return {"plan": plan}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/generate_code")
+async def generate_code(request: QuestionRequest):
+    try:
+        code = generate_manim_code(request.question)
+        return {"code": code}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/render_video")
+async def render_video(request: RenderRequest):
+    current_code = request.code
+    plan = request.plan
+    max_retries = 3
+    
+    for attempt in range(max_retries):
+        try:
+            video_path = run_manim_script(current_code)
+            # Convert local path to a URL path
+            path_parts = video_path.split("media_output")[-1].replace("\\", "/")
+            return {"video_url": path_parts, "final_code": current_code, "retries": attempt}
+        except ManimExecutionError as e:
+            print(f"Attempt {attempt + 1} failed. Error: {e.stderr}")
+            if attempt < max_retries - 1:
+                print("Attempting LLM self-correction...")
+                try:
+                    current_code = fix_manim_code(plan, current_code, e.stderr)
+                except Exception as llm_e:
+                    raise HTTPException(status_code=500, detail=f"LLM Self-correction failed: {str(llm_e)}")
+            else:
+                raise HTTPException(status_code=500, detail=f"Failed to render after {max_retries} attempts. Last error: {e.stderr}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+

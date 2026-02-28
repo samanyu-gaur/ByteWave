@@ -1,0 +1,22 @@
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Project specific
+archive/
+Manim video/
+media_output/
+
+# OS Explorer
+.DS_Store
+Thumbs.db

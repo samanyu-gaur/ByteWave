@@ -1,0 +1,734 @@
+/* Byte Wave – physics-themed UI (graph paper, formulas, scientific accents) */
+/* ─── Smooth theme transition on structural elements only (avoids breaking SVG animations) ─── */
+html, body, #root,
+header, footer, nav, main, section, aside,
+div, button, a, input, textarea, select, label, p, h1, h2, h3, h4, h5, h6, span {
+  transition:
+    background-color 0.25s ease,
+    border-color     0.25s ease,
+    color            0.25s ease,
+    box-shadow       0.25s ease;
+}
+
+/* ─── Dark theme (default) ─── */
+:root,
+html[data-theme="dark"] {
+  /* Dark gradient background theme */
+  --bg-dark: #0f0f14;
+  --bg-card: rgba(255, 255, 255, 0.06);
+  --bg-card-hover: rgba(255, 255, 255, 0.09);
+  --bg-glass: rgba(255, 255, 255, 0.08);
+  --bg-glass-strong: rgba(255, 255, 255, 0.12);
+
+  /* Text */
+  --primary-text: #f4f4f8;
+  --primary-text-muted: #a1a1b5;
+  --primary-bg: #0f0f14;
+  --primary-bg-secondary: rgba(255, 255, 255, 0.05);
+
+  /* Physics / graph accents */
+  --graph-line: rgba(99, 102, 241, 0.14);
+  --graph-axis: rgba(255, 255, 255, 0.08);
+  --graph-axis-thick: rgba(99, 102, 241, 0.4);
+  --formula-bg: rgba(255, 255, 255, 0.06);
+  --formula-border: rgba(139, 92, 246, 0.25);
+  --font-formula: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-readout: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+
+  /* Accent – gradient-friendly */
+  --accent-main: #6366f1;
+  --accent-hover: #818cf8;
+  --accent-success: #34d399;
+  --accent-warning: #fbbf24;
+  --accent-neutral: #94a3b8;
+
+  /* Skill states */
+  --skill-not-started: #64748b;
+  --skill-in-progress: #fbbf24;
+  --skill-mastered: #34d399;
+
+  /* Border – subtle light */
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-medium: rgba(255, 255, 255, 0.15);
+
+  /* Recommendation */
+  --rec-high: #818cf8;
+  --rec-mid: #a78bfa;
+  --rec-low: #c4b5fd;
+
+  /* Gradients */
+  --gradient-hero: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(99, 102, 241, 0.35), transparent 60%),
+    linear-gradient(180deg, #0f0f14 0%, #16161d 50%, #0f0f14 100%);
+  --gradient-accent: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+
+  /* Spacing */
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+
+  /* Radii – softer, product-style */
+  --radius-chip: 14px;
+  --radius-card: 20px;
+  --radius-btn: 14px;
+  --radius-input: 12px;
+
+  /* Typography */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --text-h1: 28px;
+  --text-h2: 22px;
+  --text-h3: 18px;
+  --text-body: 16px;
+  --text-body-small: 14px;
+  --text-caption: 12px;
+  --lh-h1: 1.2;
+  --lh-h2: 1.3;
+  --lh-h3: 1.35;
+  --lh-body: 1.5;
+  --lh-body-small: 1.45;
+  --lh-caption: 1.35;
+}
+
+/* ─── Light theme overrides ─── */
+html[data-theme="light"] {
+  --bg-dark:              #f0f0f8;
+  --bg-card:              rgba(0, 0, 0, 0.04);
+  --bg-card-hover:        rgba(0, 0, 0, 0.07);
+  --bg-glass:             rgba(255, 255, 255, 0.82);
+  --bg-glass-strong:      rgba(255, 255, 255, 0.95);
+
+  --primary-text:         #1a1a2e;
+  --primary-text-muted:   #5c5c7a;
+  --primary-bg:           #f0f0f8;
+  --primary-bg-secondary: rgba(0, 0, 0, 0.04);
+
+  --graph-line:           rgba(99, 102, 241, 0.09);
+  --graph-axis:           rgba(0, 0, 0, 0.09);
+  --graph-axis-thick:     rgba(99, 102, 241, 0.55);
+  --formula-bg:           rgba(99, 102, 241, 0.07);
+  --formula-border:       rgba(99, 102, 241, 0.22);
+
+  --border-light:         rgba(0, 0, 0, 0.09);
+  --border-medium:        rgba(0, 0, 0, 0.14);
+
+  --gradient-hero:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(99, 102, 241, 0.18), transparent 60%),
+    linear-gradient(180deg, #f0f0f8 0%, #e8e8f4 50%, #f0f0f8 100%);
+  --gradient-card:        linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 100%);
+}
+
+/* ─── Light theme: body grid lines use dark ink ─── */
+html[data-theme="light"] body {
+  background-image:
+    linear-gradient(var(--graph-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-line) 1px, transparent 1px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  color: var(--primary-text);
+  background: var(--primary-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-image:
+    linear-gradient(var(--graph-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: 0 0;
+}
+
+#root {
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* Physics-style background: subtle graph-paper grid */
+.physics-bg {
+  background-image:
+    linear-gradient(var(--graph-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0;
+}
+.physics-bg-strong {
+  background-image:
+    linear-gradient(var(--graph-axis) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-axis) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+/* Optional: axis-style vertical/horizontal emphasis */
+.physics-bg-axis::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--graph-axis) 1px, transparent 1px) 50% 0 / 80px 100% no-repeat,
+    linear-gradient(var(--graph-axis) 1px, transparent 1px) 0 50% / 100% 80px no-repeat;
+  opacity: 0.5;
+}
+
+/* Formula / equation typography */
+.font-formula {
+  font-family: var(--font-formula);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.formula-badge {
+  font-family: var(--font-formula);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--primary-text-muted);
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--formula-bg);
+  border: 1px solid var(--formula-border);
+}
+
+/* ---- Physics GUI: graph-quadrant cards, scale bars, readouts ---- */
+.gui-graph-card {
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--graph-axis-thick);
+  border-bottom: 3px solid var(--graph-axis-thick);
+  border-radius: 0 12px 0 0;
+  position: relative;
+}
+.gui-graph-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 8px;
+  height: 8px;
+  background: var(--graph-axis-thick);
+  border-radius: 0 2px 0 0;
+}
+.gui-readout {
+  font-family: var(--font-readout);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+.gui-plot-frame {
+  border: 1px solid var(--graph-axis);
+  border-left: 2px solid var(--graph-axis-thick);
+  border-bottom: 2px solid var(--graph-axis-thick);
+  border-radius: 0 16px 0 0;
+  padding: 24px;
+  position: relative;
+  background: rgba(0, 0, 0, 0.15);
+}
+.gui-plot-frame::before,
+.gui-plot-frame::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--graph-axis-thick);
+  border-radius: 2px;
+}
+.gui-plot-frame::before { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+.gui-plot-frame::after { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+.gui-control-btn {
+  border: 2px solid var(--accent-main);
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.25) 0%, rgba(99, 102, 241, 0.1) 100%);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 0 rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.gui-control-btn:hover {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.35) 0%, rgba(99, 102, 241, 0.15) 100%);
+  box-shadow: 0 3px 0 rgba(99, 102, 241, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.gui-scale-track {
+  position: relative;
+  height: 10px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--graph-axis) 0,
+    var(--graph-axis) 1px,
+    transparent 1px,
+    transparent 25%
+  );
+  background-size: 100% 100%;
+  background-color: var(--border-light);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.gui-scale-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.gui-nav-tab {
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+}
+.gui-nav-tab.active {
+  border-bottom-color: var(--graph-axis-thick);
+  color: var(--primary-text);
+}
+
+/* Glass panel utility */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+}
+
+/* Typography classes */
+.text-h1 { font-family: var(--font-display); font-size: var(--text-h1); font-weight: 700; line-height: var(--lh-h1); }
+.text-h2 { font-family: var(--font-display); font-size: var(--text-h2); font-weight: 600; line-height: var(--lh-h2); }
+.text-h3 { font-family: var(--font-display); font-size: var(--text-h3); font-weight: 600; line-height: var(--lh-h3); }
+.text-body { font-size: var(--text-body); font-weight: 400; line-height: var(--lh-body); }
+.text-body-small { font-size: var(--text-body-small); font-weight: 400; line-height: var(--lh-body-small); color: var(--primary-text-muted); }
+.text-caption { font-size: var(--text-caption); font-weight: 400; line-height: var(--lh-caption); color: var(--primary-text-muted); }
+.text-label { font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.5px; }
+.text-score { font-size: 20px; font-weight: 700; line-height: 28px; }
+
+/* ─── Physics skeleton: oscilloscope sine-wave ───────────────────────────────
+   The ::after layer tiles a seamless SVG sine wave as a background-image and
+   scrolls it left — exactly one period per animation cycle so it loops cleanly.
+   The SVG starts and ends at y=30 (mid-line) so horizontal tiling is seamless.
+   Colours are hardcoded (no CSS vars in data-URI) matching the ByteWave palette. */
+
+.bw-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+}
+
+/* Faint grid layer — oscilloscope screen feel */
+.bw-skeleton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 49px,
+      rgba(99,102,241,0.06) 49px,
+      rgba(99,102,241,0.06) 50px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 19px,
+      rgba(99,102,241,0.06) 19px,
+      rgba(99,102,241,0.06) 20px
+    );
+  pointer-events: none;
+}
+
+/* Scrolling sine wave */
+.bw-skeleton::after {
+  content: '';
+  position: absolute;
+  /* vertically centred strip */
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 40px;
+
+  /*
+    One full sine cycle fits in a 200×40 tile:
+      M0,20  → starts at mid-line
+      ...bezier crest up to y=4, trough down to y=36 ...
+      200,20 → ends at mid-line  ← tiles seamlessly with next copy
+    Three layers: glow halo · main stroke · bright crest dot
+    We stack them with multiple background-image declarations.
+  */
+  background-image:
+    /* bright leading-crest dot at the first peak (x≈50, y≈4) */
+    radial-gradient(
+      circle 5px at 50px 4px,
+      rgba(196,181,253,1)   0%,
+      rgba(167,139,250,0.6) 50%,
+      transparent            100%
+    ),
+    /* main wave stroke (SVG tiled) */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='40'%3E%3Cpath d='M0,20 C18,20 18,4 50,4 C82,4 82,20 100,20 C118,20 118,36 150,36 C182,36 182,20 200,20' fill='none' stroke='rgba(129%2C140%2C248%2C0.55)' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"),
+    /* soft glow halo behind the wave */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='40'%3E%3Cpath d='M0,20 C18,20 18,4 50,4 C82,4 82,20 100,20 C118,20 118,36 150,36 C182,36 182,20 200,20' fill='none' stroke='rgba(99%2C102%2C241%2C0.18)' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E");
+
+  background-repeat: repeat-x, repeat-x, repeat-x;
+  background-size:   200px 40px, 200px 40px, 200px 40px;
+  background-position: 0 50%, 0 50%, 0 50%;
+
+  animation: bw-skel-scroll 1.6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes bw-skel-scroll {
+  /* scroll exactly one tile width → seamless loop */
+  from { background-position: 0 50%,   0 50%,   0 50%; }
+  to   { background-position: 200px 50%, 200px 50%, 200px 50%; }
+}
+
+/* Legacy alias — keeps any leftover inline animation: skeleton-pulse references harmless */
+@keyframes skeleton-pulse {
+  0%,100% { opacity: 0.6; }
+  50%     { opacity: 1;   }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes bounce-in {
+  0%   { opacity: 0; transform: scale(0.9) translateY(8px); }
+  60%  { opacity: 1; transform: scale(1.02) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes anim-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+:root {
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-ui:     0.4s;
+}
+
+.anim-slide-up  { animation: slide-up  0.5s var(--ease-out-smooth) forwards; }
+.anim-bounce-in { animation: bounce-in 0.5s var(--ease-spring) forwards; }
+.anim-float     { animation: anim-float 4s ease-in-out infinite; }
+
+.anim-delay-1 { animation-delay: 0.05s; }
+.anim-delay-2 { animation-delay: 0.1s; }
+.anim-delay-3 { animation-delay: 0.15s; }
+.anim-delay-4 { animation-delay: 0.2s; }
+.anim-delay-5 { animation-delay: 0.25s; }
+.anim-delay-6 { animation-delay: 0.3s; }
+
+.hover-lift {
+  transition: transform var(--duration-ui) var(--ease-spring), box-shadow var(--duration-ui) var(--ease-out-smooth);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* Custom cursor (physics orbit) */
+body.custom-cursor-active.custom-cursor-visible,
+body.custom-cursor-active.custom-cursor-visible * {
+  cursor: none !important;
+}
+@keyframes cursor-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Physics topic tiles – innovative hover */
+.physics-tile {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, border-color 0.2s ease;
+}
+.physics-tile:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+}
+.tile-orbit-ring {
+  animation: tile-orbit-spin 6s linear infinite;
+}
+.physics-tile:hover .tile-orbit-ring {
+  animation: tile-orbit-spin 4s linear infinite;
+}
+@keyframes tile-orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+/* Secondary ring (inner orbit) – reverse direction */
+.tile-orbit-ring::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 18px;
+  border: 1px dashed rgba(139, 92, 246, 0.35);
+  animation: tile-orbit-spin 8s linear infinite reverse;
+  pointer-events: none;
+}
+/* Soft glow pulse on hover */
+@keyframes tile-glow-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.physics-tile:hover .tile-orbit-ring {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  animation: tile-orbit-spin 4s linear infinite, tile-glow-pulse 2s ease-in-out infinite;
+}
+.tile-dragging {
+  opacity: 0.95;
+}
+
+/* ---- Landing physics topic tile animations (topic-related) ---- */
+.tile-anim-wrap {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.tile-anim-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* Physics topic tile animations run ONLY on hover */
+.physics-tile .tile-anim-wrap,
+.physics-tile .tile-anim-wrap *,
+.physics-tile .tile-anim-wrap svg,
+.physics-tile .tile-anim-wrap svg * {
+  animation-play-state: paused !important;
+}
+.physics-tile:hover .tile-anim-wrap,
+.physics-tile:hover .tile-anim-wrap *,
+.physics-tile:hover .tile-anim-wrap svg,
+.physics-tile:hover .tile-anim-wrap svg * {
+  animation-play-state: running !important;
+}
+/* ── Motion & Kinematics ── */
+@keyframes tile-motion-slide {
+  0%, 100% { transform: translateX(-8px); }
+  50%       { transform: translateX(8px); }
+}
+@keyframes tile-slope-draw {
+  0%   { stroke-dashoffset: 40; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* ── Forces ── */
+@keyframes tile-forces-push {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50%       { transform: scale(1.1); opacity: 1; }
+}
+
+/* ── Work, Energy & Power ── */
+@keyframes tile-gear-cw  { from { transform: rotate(0deg);   } to { transform: rotate(360deg);  } }
+@keyframes tile-gear-ccw { from { transform: rotate(0deg);   } to { transform: rotate(-360deg); } }
+
+/* ── Waves & Sound: scrolling sine wave + amplitude breathe ── */
+@keyframes tile-sound-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-24px); }
+}
+@keyframes tile-sound-breathe {
+  0%, 100% { transform: scaleY(0.35); }
+  50%       { transform: scaleY(1); }
+}
+
+/* ── Light & Radiation ── */
+@keyframes tile-light-glow {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+@keyframes tile-light-ray-in {
+  0%       { stroke-dashoffset: 22; opacity: 0; }
+  30%, 80% { stroke-dashoffset: 0;  opacity: 1; }
+  100%     { stroke-dashoffset: 0;  opacity: 0; }
+}
+
+/* ── Electricity & Circuits ── */
+@keyframes tile-circuit-flow {
+  0%   { stroke-dashoffset: 108; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* ── Magnetism: external arcs (N→S) + internal line (S→N) ── */
+@keyframes tile-magext-tight {
+  from { stroke-dashoffset: 60; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes tile-magext-wide {
+  from { stroke-dashoffset: 78; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes tile-magint {
+  from { stroke-dashoffset: 48; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* ── Heat & Thermodynamics ── */
+@keyframes tile-mercury-rise {
+  0%, 100% { transform: scaleY(0.18); }
+  50%       { transform: scaleY(0.9); }
+}
+@keyframes tile-bulb-pulse {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+@keyframes tile-heat-wavy {
+  0%, 100% { opacity: 0.3; transform: translateX(0); }
+  50%       { opacity: 1;   transform: translateX(2px); }
+}
+
+/* ── Gravity & Orbits ── */
+@keyframes tile-gravity-orbit {
+  0%   { transform: translate(17px,  0);   }
+  25%  { transform: translate(0,    -9px); }
+  50%  { transform: translate(-17px, 0);   }
+  75%  { transform: translate(0,     9px); }
+  100% { transform: translate(17px,  0);   }
+}
+@keyframes tile-star-glow {
+  0%, 100% { transform: scale(1);    opacity: 0.15; }
+  50%       { transform: scale(1.22); opacity: 0.32; }
+}
+
+/* ── Atoms & Nuclei ── */
+@keyframes tile-atom-electron {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes tile-nucleus-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.18; }
+  50%       { transform: scale(1.25); opacity: 0.38; }
+}
+
+/* ─── GPU compositing hints ───────────────────────────────────────────────────
+   Promote elements that animate transform/opacity to their own compositor layer.
+   This avoids layout thrashing and keeps animations on the GPU thread.        */
+[class*="topic-icon-"],
+.skill-map-node,
+[data-animated] {
+  will-change: transform, opacity;
+}
+
+/* Remove will-change once animation settles (hover cards) */
+button:not(:hover):not(:focus) [data-hover-animated] {
+  will-change: auto;
+}
+
+/* Prevent layout shifts from backdrop-filter on Firefox */
+header[style*="backdrop-filter"],
+div[style*="backdrop-filter"] {
+  transform: translateZ(0);
+}
+
+/* ─── Mobile responsive — max-width: 768px ────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* ── AppNav ── */
+  header[style*="sticky"] > div {
+    padding: 0 16px !important;
+    height: 56px !important;
+  }
+  /* Hide icon labels, keep icons */
+  header[style*="sticky"] nav a span:not(svg) {
+    display: none;
+  }
+  header[style*="sticky"] nav {
+    max-width: 240px !important;
+    gap: 0 !important;
+    padding: 3px !important;
+  }
+  header[style*="sticky"] nav a {
+    padding: 7px !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+  }
+
+  /* ── LearnLayout main ── */
+  main {
+    padding: 16px 14px 48px !important;
+  }
+
+  /* ── Home dashboard ── */
+  .home-grid,
+  div[style*="auto-fit, minmax(260px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Skill map ── */
+  .skill-map-detail-panel {
+    width: 100% !important;
+    right: 0 !important;
+    left: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+  }
+
+  /* ── Chat ── */
+  .chat-input-bar {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* ── Forum hero ── */
+  .forum-hero-inner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  .forum-stats-row {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+
+  /* ── Forum post + breadcrumb ── */
+  .forum-breadcrumb {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* ── Landing hero ── */
+  .landing-hero-text h1 {
+    font-size: clamp(28px, 9vw, 54px) !important;
+  }
+  .landing-prob-sol-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .landing-diff-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .landing-feature-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  .landing-cta-buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* ── Assess breadcrumb + actions ── */
+  .breadcrumb-row {
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+
+  /* ── Feedback actions ── */
+  .feedback-actions {
+    flex-direction: column !important;
+  }
+
+  /* ── Generic card grids ── */
+  div[style*="repeat(auto-fill, minmax(260px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Typography scale-down ── */
+  h1.text-h1 { font-size: 22px !important; }
+  h1.text-h2 { font-size: 18px !important; }
+}
