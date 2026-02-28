@@ -81,17 +81,35 @@ def read_skills(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
         db.commit()
         skills = db.query(models.Skill).offset(skip).limit(limit).all()
         
-        # Also seed a test user
-        if not db.query(models.User).filter(models.User.username == "student1").first():
-            user = models.User(username="student1")
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-            # init progress
-            for s in skills:
-                db.add(models.UserProgress(user_id=user.id, skill_id=s.id, status="Not started", mastery_score=0.0))
-            db.commit()
+    # Always ensure test user exists and has mock varied data for the UI
+    user = db.query(models.User).filter(models.User.username == "student1").first()
+    if not user:
+        user = models.User(username="student1")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
         
+    progresses = db.query(models.UserProgress).filter(models.UserProgress.user_id == user.id).all()
+    mock_progress_data = [
+        {"status": "Mastered", "score": 0.95},
+        {"status": "In progress", "score": 0.60},
+        {"status": "Not started", "score": 0.0},
+    ]
+    
+    if not progresses:
+        for i, s in enumerate(skills):
+            mp = mock_progress_data[i % len(mock_progress_data)]
+            db.add(models.UserProgress(user_id=user.id, skill_id=s.id, status=mp["status"], mastery_score=mp["score"]))
+        db.commit()
+    else:
+        # If progress exists but is completely empty (from old code), update it to show UI examples
+        if all(p.status == "Not started" for p in progresses):
+            for i, p in enumerate(progresses):
+                mp = mock_progress_data[i % len(mock_progress_data)]
+                p.status = mp["status"]
+                p.mastery_score = mp["score"]
+            db.commit()
+            
     return skills
 
 # --- USER PROGRESS ---
