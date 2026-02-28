@@ -34,6 +34,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- AUTH API ---
+
+@app.post("/api/signup", response_model=schemas.UserResponse)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    """Create a new user and initialize blank progress for all skills."""
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered")
+    
+    new_user = models.User(username=user.username)
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    # Initialize blank progress for all skills
+    skills = db.query(models.Skill).all()
+    for s in skills:
+        db.add(models.UserProgress(user_id=new_user.id, skill_id=s.id, status="Not started", mastery_score=0.0))
+    db.commit()
+    
+    return new_user
+
+@app.post("/api/login", response_model=schemas.UserResponse)
+def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    """Simple login by checking if user exists."""
+    db_user = db.query(models.User).filter(models.User.username == user.username).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
 # --- SKILLS API ---
 
 @app.get("/api/skills", response_model=List[schemas.Skill])

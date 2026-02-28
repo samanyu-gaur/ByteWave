@@ -62,3 +62,18 @@ class RecommendationResponse(BaseModel):
     item_name: str
     match_score: float # e.g. 0.85 for 85% match
     reason: str
+
+class UserBase(BaseModel):
+    username: str
+
+class UserCreate(UserBase):
+    pass
+
+class UserLogin(UserBase):
+    pass
+
+class UserResponse(UserBase):
+    id: int
+
+    class Config:
+        from_attributes = True
