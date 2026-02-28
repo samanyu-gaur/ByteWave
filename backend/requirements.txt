@@ -6,3 +6,4 @@ python-dotenv
 requests
 pytest
 psycopg2-binary
+manim
