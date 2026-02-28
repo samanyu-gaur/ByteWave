@@ -8,11 +8,17 @@ load_dotenv()
 
 class LLMService:
     def __init__(self):
-        self.api_key = os.getenv("OPENROUTER_API_KEY")
-        self.api_url = "https://openrouter.ai/api/v1/chat/completions"
-        self.default_model = "openrouter/auto" # Auto-router for best model, or "openrouter/free" for free models
-        if self.api_key:
-            self.default_model = "openrouter/free"
+        self.api_key = os.getenv("MINIMAX_API_KEY", "").strip("'").strip('"')
+        
+        base_url = os.getenv('MINIMAX_BASE_URL', 'https://api.minimax.io/v1').strip("'").strip('"')
+        self.api_url = f"{base_url}/chat/completions"
+        
+        self.default_model = os.getenv("LLM_MODEL", "MiniMax-M2.5").strip("'").strip('"')
+        self.group_id = os.getenv("MINIMAX_GROUP_ID", "").strip("'").strip('"')
+        
+        # Fallback for backwards compatibility
+        if not self.api_key:
+            self.api_key = os.getenv("OPENROUTER_API_KEY", "").strip("'").strip('"')
         
     def analyze_answer(self, case_title: str, question: str, user_answer: str):
         """
@@ -34,11 +40,11 @@ class LLMService:
         
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "HTTP-Referer": "http://localhost:5173", # Optional, for OpenRouter rankings
-            "X-Title": "ByteWave Physics Platform", # Optional, for OpenRouter rankings
             "Content-Type": "application/json"
         }
-        
+        if self.group_id:
+            headers["GroupId"] = self.group_id
+            
         payload = {
             "model": self.default_model,
             "messages": [
@@ -72,24 +78,24 @@ class LLMService:
                 "feedback": feedback
             }
         except Exception as e:
-            print(f"OpenRouter API Error: {e}")
+            print(f"Minimax API Error: {e}")
             print("Falling back to mock analysis...")
             return self._mock_analyze_answer(user_answer)
             
     def chat(self, messages: list):
         """
-        Generic chat completion endpoint for the frontend using OpenRouter.
+        Generic chat completion endpoint for the frontend using Minimax.
         """
         if not self.api_key or self.api_key == "your_openrouter_api_key_here":
-            return "Please add your OpenRouter API Key to the backend .env file to use the chatbot."
+            return "Please add your MINIMAX_API_KEY to the backend Environment Variables on Render to use the chatbot."
             
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "HTTP-Referer": "http://localhost:5173",
-            "X-Title": "ByteWave Physics Platform",
             "Content-Type": "application/json"
         }
-        
+        if self.group_id:
+            headers["GroupId"] = self.group_id
+            
         payload = {
             "model": self.default_model,
             "messages": messages,
@@ -102,7 +108,7 @@ class LLMService:
             result = response.json()
             return result["choices"][0]["message"]["content"]
         except Exception as e:
-            print(f"OpenRouter Chat API Error: {e}")
+            print(f"Minimax Chat API Error: {e}")
             return "Sorry, I am having trouble connecting to my brain right now."
 
     def _mock_analyze_answer(self, user_answer: str):
