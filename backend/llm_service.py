@@ -56,7 +56,7 @@ class LLMService:
         }
         
         try:
-            response = requests.post(self.api_url, headers=headers, json=payload, timeout=15)
+            response = requests.post(self.api_url, headers=headers, json=payload, timeout=60)
             response.raise_for_status()
             result = response.json()
             
@@ -103,7 +103,7 @@ class LLMService:
         }
         
         try:
-            response = requests.post(self.api_url, headers=headers, json=payload, timeout=20)
+            response = requests.post(self.api_url, headers=headers, json=payload, timeout=60)
             response.raise_for_status()
             result = response.json()
             return result["choices"][0]["message"]["content"]
