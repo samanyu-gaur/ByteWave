@@ -4,7 +4,7 @@ import { useForum } from '../hooks/useForum'
 import AppNav from '../components/AppNav'
 
 // ─── System prompt ────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are Byte Wave AI — a sharp, friendly physics tutor for high school students. You help with kinematics, forces, energy, waves, electricity, magnetism, optics, thermodynamics, gravity, and nuclear physics. Keep answers clear, use real-world examples, and when relevant use simple equations. Never be condescending.`
+const SYSTEM_PROMPT = `You are Byte Wave AI — a sharp, friendly physics tutor for high school students. You help with kinematics, forces, energy, waves, electricity, magnetism, optics, thermodynamics, gravity, and nuclear physics. Keep answers clear, use real-world examples. IMPORTANT: When displaying math or equations, you MUST use LaTeX formatting. Use double dollar signs for block equations ($$E=mc^2$$) and single dollar signs for inline math ($x=5$). Never be condescending.`
 
 // ─── Topic-specific quick-prompt chips ────────────────────────────────────────
 const TOPIC_PROMPTS = {
@@ -69,23 +69,10 @@ const GENERAL_PROMPTS = [
   'What is centripetal force?',
 ]
 
-// ─── Detect physics formulas in text and wrap them ───────────────────────────
-const FORMULA_RE = /(\b[A-Za-zΑ-Ωα-ω][₀-₉]?\s*[=≈]\s*[^.,;!?\n]{1,50}|\b[A-Za-z]\s*=\s*[A-Za-z\/\^²³0-9\s\+\-\*\.]{2,30})/g
-
-function formatMessage(text) {
-  const parts = []
-  let last = 0
-  let m
-  FORMULA_RE.lastIndex = 0
-  while ((m = FORMULA_RE.exec(text)) !== null) {
-    if (m.index > last) parts.push({ type: 'text', val: text.slice(last, m.index) })
-    parts.push({ type: 'formula', val: m[0] })
-    last = FORMULA_RE.lastIndex
-  }
-  if (last < text.length) parts.push({ type: 'text', val: text.slice(last) })
-  if (parts.length === 0) parts.push({ type: 'text', val: text })
-  return parts
-}
+import ReactMarkdown from 'react-markdown'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 
 // ─── Typewriter component ─────────────────────────────────────────────────────
 function TypewriterText({ text }) {
@@ -107,18 +94,16 @@ function TypewriterText({ text }) {
   const parts = formatMessage(displayed)
 
   return (
-    <span>
-      {parts.map((p, i) =>
-        p.type === 'formula'
-          ? <code key={i} style={{
-            fontFamily: 'monospace', fontSize: '0.9em',
-            background: 'rgba(99,102,241,0.15)',
-            border: '1px solid rgba(99,102,241,0.25)',
-            borderRadius: 4, padding: '1px 5px',
-            color: '#a78bfa',
-          }}>{p.val}</code>
-          : <span key={i}>{p.val}</span>
-      )}
+    <span className="markdown-render-wrapper">
+      <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+          p: ({ node, ...props }) => <span {...props} />
+        }}
+      >
+        {displayed}
+      </ReactMarkdown>
       {!done && (
         <span style={{
           display: 'inline-block', width: 2, height: '1em',
@@ -220,16 +205,14 @@ function MessageBubble({ msg, isLatestAI }) {
             ? msg.content
             : (isLatestAI
               ? <TypewriterText text={msg.content} />
-              : <span>{formatMessage(msg.content).map((p, i) =>
-                p.type === 'formula'
-                  ? <code key={i} style={{
-                    fontFamily: 'monospace', fontSize: '0.9em',
-                    background: 'rgba(99,102,241,0.15)',
-                    border: '1px solid rgba(99,102,241,0.25)',
-                    borderRadius: 4, padding: '1px 5px', color: '#a78bfa',
-                  }}>{p.val}</code>
-                  : <span key={i}>{p.val}</span>
-              )}</span>
+              : <div className="markdown-render-wrapper">
+                <ReactMarkdown
+                  remarkPlugins={[remarkMath]}
+                  rehypePlugins={[rehypeKatex]}
+                >
+                  {msg.content}
+                </ReactMarkdown>
+              </div>
             )
           }
         </div>
@@ -436,6 +419,14 @@ export default function Chat() {
         }
         .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         textarea:focus { outline: none; border-color: var(--accent-main) !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+        .markdown-render-wrapper p { margin-top: 0; margin-bottom: 0.5em; }
+        .markdown-render-wrapper p:last-child { margin-bottom: 0; }
+        .markdown-render-wrapper code { 
+          font-family: monospace; font-size: 0.9em; 
+          background: rgba(99,102,241,0.15); 
+          border: 1px solid rgba(99,102,241,0.25); 
+          border-radius: 4px; padding: 1px 5px; color: #a78bfa; 
+        }
       `}</style>
 
       {/* ── Subtle physics formula background ── */}
