@@ -4,6 +4,7 @@ import TopicAnimation from '../components/TopicAnimation'
 import Skeleton from '../components/Skeleton'
 import { MOCK_PROGRESS } from '../mockData'
 import { getTopicById } from '../physicsTopics'
+import { useAuth } from '../hooks/useAuth'
 
 // ─── Constellation layout ─────────────────────────────────────────────────────
 // Node (x,y) positions inside an 820 × 490 viewBox — spread across the full canvas
@@ -403,13 +404,24 @@ function OverallBar({ nodes }) {
 // ─── Main ────────────────────────────────────────────────────────────────────
 export default function SkillMap() {
   const navigate = useNavigate()
+  const { isAuthenticated, user } = useAuth()
   const [nodes, setNodes] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      // Fallback example for unauthenticated users
+      setNodes(MOCK_PROGRESS)
+      const first = MOCK_PROGRESS.find(n => n.status === 'In progress') || MOCK_PROGRESS[0]
+      if (first) setSelected(first.skill_id)
+      setLoading(false)
+      return
+    }
+
+    const userId = user?.id || 1;
     const API_URL = import.meta.env.VITE_API_URL || '';
-    fetch(`${API_URL}/api/progress/1`)
+    fetch(`${API_URL}/api/progress/${userId}`)
       .then(r => r.json())
       .then(d => {
         setNodes(d)
@@ -424,7 +436,7 @@ export default function SkillMap() {
         if (first) setSelected(first.skill_id)
         setLoading(false)
       })
-  }, [])
+  }, [isAuthenticated, user])
 
   const selectedNode = useMemo(
     () => nodes.find(n => n.skill_id === selected) ?? null,
@@ -435,11 +447,38 @@ export default function SkillMap() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       {/* ── Header ── */}
-      <div>
-        <h1 className="text-h1" style={{ margin: '0 0 4px' }}>Skill Map</h1>
-        <p className="text-body-small" style={{ margin: 0 }}>
-          Click a node to explore the topic. Connected lines show how concepts relate.
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 className="text-h1" style={{ margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            Skill Map
+            {!isAuthenticated && (
+              <span style={{
+                fontSize: 12, fontWeight: 700, padding: '4px 10px',
+                background: 'rgba(251,191,36,0.15)', color: '#fbbf24',
+                border: '1px solid rgba(251,191,36,0.3)', borderRadius: 100,
+                letterSpacing: '0.05em', textTransform: 'uppercase'
+              }}>
+                Example Preview
+              </span>
+            )}
+          </h1>
+          <p className="text-body-small" style={{ margin: 0 }}>
+            {isAuthenticated
+              ? "Click a node to explore the topic. Connected lines show how concepts relate."
+              : "This is a sample skill map. Log in or sign up to save your own progress and track achievements!"
+            }
+          </p>
+        </div>
+        {!isAuthenticated && (
+          <button onClick={() => navigate('/login')} style={{
+            padding: '8px 16px', borderRadius: 8,
+            background: 'var(--gradient-accent)', color: '#fff',
+            fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(99,102,241,0.3)'
+          }}>
+            Log in to save progress
+          </button>
+        )}
       </div>
 
       {loading ? <SkillMapSkeleton /> : (
