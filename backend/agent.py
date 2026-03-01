@@ -32,8 +32,7 @@ def _minimax_chat(messages, model=None):
         
     data = {
         "model": model or LLM_MODEL,
-        "messages": messages,
-        "max_tokens": 8192
+        "messages": messages
     }
     
     response = requests.post(url, headers=headers, json=data)
