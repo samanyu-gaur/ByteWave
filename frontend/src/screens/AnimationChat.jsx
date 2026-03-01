@@ -44,61 +44,42 @@ export default function AnimationChat() {
         try {
             // STEP 1: Plan
             setStep(1)
-            setPlanHtml('<p style="color:var(--primary-text-muted); text-align:center; padding: 20px 0;">Analyzing physics concept with LLM...</p>')
+            setPlanHtml('<p style="color:var(--primary-text-muted); text-align:center; padding: 20px 0;">Analyzing physics concept and mapping to animations...</p>')
 
             const API_URL = import.meta.env.VITE_API_URL || '';
-            const planRes = await fetch(`${API_URL}/api/generate_plan`, {
+            const res = await fetch(`${API_URL}/api/get_animation`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question })
             })
 
-            if (!planRes.ok) {
-                const errData = await planRes.json().catch(() => ({}))
-                throw new Error(errData.detail || planRes.statusText || 'Failed to generate plan')
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}))
+                throw new Error(errData.detail || res.statusText || 'Failed to fetch animation data')
             }
-            const planData = await planRes.json()
-            const planText = planData.plan
-            setPlanHtml(marked.parse(planText))
+
+            const data = await res.json()
+
+            // Give a little natural feeling delay
+            await new Promise(r => setTimeout(r, 600));
+            setPlanHtml(marked.parse(data.plan))
 
             // STEP 2: Code
             setStep(2)
-            setManimCode('# Writing Manim python code based on the plan...\n')
+            setManimCode('# Retrieving matched Manim python code based on the plan...\n')
 
-            const codeRes = await fetch(`${API_URL}/api/generate_code`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: planText })
-            })
-            if (!codeRes.ok) {
-                const errData = await codeRes.json().catch(() => ({}))
-                throw new Error(errData.detail || codeRes.statusText || 'Failed to generate code')
-            }
-            const codeData = await codeRes.json()
-            let currentCode = codeData.code
-            setManimCode(currentCode)
+            await new Promise(r => setTimeout(r, 800));
+            setManimCode(data.code)
 
-            // STEP 3: Render
+            // STEP 3: Render (Fake build step)
             setStep(3)
             setVideoUrl('')
 
-            const renderRes = await fetch(`${API_URL}/api/render_video`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: currentCode, plan: planText })
-            })
-            if (!renderRes.ok) {
-                const errData = await renderRes.json().catch(() => ({}))
-                throw new Error(errData.detail || renderRes.statusText || 'Failed to render video')
-            }
-            const renderData = await renderRes.json()
+            // Fake rendering delay
+            await new Promise(r => setTimeout(r, 1200));
 
-            if (renderData.final_code && renderData.final_code !== currentCode) {
-                setManimCode('# Original code failed. Auto-corrected code:\n\n' + renderData.final_code)
-                setShowRetryMsg(true)
-            }
-
-            setVideoUrl(`http://localhost:8000${renderData.video_url}`)
+            // Set the pre-rendered static video url
+            setVideoUrl(data.video_url)
             setStep(4) // fully completed
 
         } catch (err) {

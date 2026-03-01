@@ -11,6 +11,89 @@ import { useBlackHoleTransition } from '../components/BlackHoleTransition'
 // ─── Constants ────────────────────────────────────────────────────────────────
 const HEADER_H = 58     // px — keep in sync with header height below
 
+const PREVIEW_NODES = {
+  motion: { x: 185, y: 95 }, gravity: { x: 75, y: 260 },
+  forces: { x: 268, y: 262 }, energy: { x: 382, y: 108 },
+  heat: { x: 298, y: 398 }, waves: { x: 498, y: 88 },
+  electricity: { x: 568, y: 242 }, magnetism: { x: 462, y: 388 },
+  light: { x: 658, y: 112 }, quantum: { x: 738, y: 312 },
+}
+
+const PREVIEW_EDGES = [
+  ['motion', 'gravity'], ['motion', 'forces'], ['motion', 'energy'],
+  ['forces', 'gravity'], ['forces', 'energy'], ['energy', 'heat'],
+  ['energy', 'waves'], ['heat', 'magnetism'], ['waves', 'electricity'],
+  ['waves', 'light'], ['electricity', 'magnetism'], ['electricity', 'light'],
+  ['electricity', 'quantum'], ['light', 'quantum'],
+]
+
+const MOCK_MAP_NODES = [
+  { skill_id: 'motion', name: 'Kinematics', status: 'Mastered', mastery_score: 95 },
+  { skill_id: 'forces', name: 'Newton\'s Laws', status: 'In progress', mastery_score: 60 },
+  { skill_id: 'energy', name: 'Work & Energy', status: 'Mastered', mastery_score: 88 },
+  { skill_id: 'gravity', name: 'Gravitation', status: 'Not started', mastery_score: 0 },
+  { skill_id: 'heat', name: 'Thermodynamics', status: 'Not started', mastery_score: 0 },
+  { skill_id: 'waves', name: 'Waves & Sound', status: 'In progress', mastery_score: 30 },
+  { skill_id: 'electricity', name: 'Electricity', status: 'Not started', mastery_score: 0 },
+  { skill_id: 'magnetism', name: 'Magnetism', status: 'Not started', mastery_score: 0 },
+  { skill_id: 'light', name: 'Light & Optics', status: 'Not started', mastery_score: 0 },
+  { skill_id: 'quantum', name: 'Modern Physics', status: 'Not started', mastery_score: 0 },
+]
+
+function ConstellationPreview() {
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: 'rgba(0,0,0,0.3)',
+      border: '1px solid var(--border-light)',
+      borderRadius: 16,
+      overflow: 'hidden',
+      position: 'relative',
+    }}>
+      <svg viewBox="0 0 820 490" style={{ width: '100%', height: '100%', display: 'block' }} preserveAspectRatio="xMidYMid slice">
+        {/* Subtle connecting lines */}
+        {PREVIEW_EDGES.map(([a, b]) => {
+          const na = PREVIEW_NODES[a], nb = PREVIEW_NODES[b]
+          const nodeA = MOCK_MAP_NODES.find(x => x.skill_id === a)
+          const nodeB = MOCK_MAP_NODES.find(x => x.skill_id === b)
+          const bothMastered = nodeA?.status === 'Mastered' && nodeB?.status === 'Mastered'
+          return (
+            <line key={`${a}-${b}`} x1={na.x} y1={na.y} x2={nb.x} y2={nb.y}
+              stroke={bothMastered ? '#34d39950' : 'rgba(255,255,255,0.07)'}
+              strokeWidth={bothMastered ? 1.5 : 1} />
+          )
+        })}
+        {/* Node Circles */}
+        {MOCK_MAP_NODES.map(n => {
+          const pos = PREVIEW_NODES[n.skill_id]
+          const isMastered = n.status === 'Mastered'
+          const isInProgress = n.status === 'In progress'
+          const ring = isMastered ? '#34d399' : isInProgress ? '#fbbf24' : '#374151'
+          return (
+            <g key={n.skill_id}>
+              {isInProgress && (
+                <circle cx={pos.x} cy={pos.y} r={25} fill="none" stroke={ring} strokeWidth={1.2} opacity={0.5} style={{ animation: 'constellation-pulse 2s ease-in-out infinite' }} />
+              )}
+              <circle cx={pos.x} cy={pos.y} r={21} fill="rgba(10,10,20,0.85)" stroke={ring} strokeWidth={isMastered ? 2.5 : 1.5} />
+              {n.mastery_score > 0 && (
+                <circle cx={pos.x} cy={pos.y} r={17} fill="none" stroke={ring} strokeWidth={2.5}
+                  strokeDasharray={106.8} strokeDashoffset={106.8 * (1 - n.mastery_score / 100)}
+                  strokeLinecap="round" transform={`rotate(-90 ${pos.x} ${pos.y})`} opacity={0.6} />
+              )}
+              <circle cx={pos.x} cy={pos.y} r={4} fill={n.status === 'Not started' ? 'rgba(255,255,255,0.25)' : ring} />
+              <text x={pos.x} y={pos.y + 37} textAnchor="middle" fontSize={12} fontWeight="700" fill="var(--primary-text)" fontFamily="var(--font-display)">
+                {n.name}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+      <style>{`@keyframes constellation-pulse { 0%,100% { r: 21; opacity: 0.5; } 50% { r: 27; opacity: 0.15; } }`}</style>
+    </div>
+  )
+}
+
+
 // ─── Header ──────────────────────────────────────────────────────────────────
 // Over the hero: fully transparent, all text white.
 // After scrolling past the hero: glass bg + text switches to theme colour.
@@ -617,82 +700,97 @@ export default function Landing() {
             </div>
 
             {/* Mock dashboard content */}
-            <div style={{ padding: '28px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
-              {/* Left: skill progress */}
+            <div style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: 32 }}>
+
+              {/* Top: Graphical Skill Map */}
               <div>
                 <div style={{
                   fontSize: 11, fontWeight: 700, letterSpacing: '0.09em',
-                  color: 'var(--primary-text-muted)', textTransform: 'uppercase', marginBottom: 16,
-                }}>Mastery progress</div>
-                {[
-                  { label: 'Kinematics', pct: 72, color: '#6366f1' },
-                  { label: 'Newton\'s Laws', pct: 45, color: '#8b5cf6' },
-                  { label: 'Energy & Work', pct: 88, color: '#22c55e' },
-                  { label: 'Waves & Sound', pct: 30, color: '#3b82f6' },
-                  { label: 'Thermodynamics', pct: 18, color: '#f59e0b' },
-                ].map(({ label, pct, color }) => (
-                  <div key={label} style={{ marginBottom: 12 }}>
-                    <div style={{
-                      display: 'flex', justifyContent: 'space-between',
-                      fontSize: 12, marginBottom: 5,
-                    }}>
-                      <span style={{ color: 'var(--primary-text)', fontWeight: 600 }}>{label}</span>
-                      <span style={{ color, fontWeight: 700 }}>{pct}%</span>
-                    </div>
-                    <div style={{
-                      height: 6, background: 'var(--border-light)',
-                      borderRadius: 100, overflow: 'hidden',
-                    }}>
-                      <div style={{
-                        height: '100%', width: `${pct}%`,
-                        background: `linear-gradient(90deg, ${color}aa, ${color})`,
-                        borderRadius: 100,
-                      }} />
-                    </div>
-                  </div>
-                ))}
+                  color: 'var(--primary-text-muted)', textTransform: 'uppercase', marginBottom: 12,
+                }}>Live Skill Map Snapshot</div>
+                <div style={{ height: 260 }}>
+                  <ConstellationPreview />
+                </div>
               </div>
 
-              {/* Right: recommendation rows */}
-              <div>
-                <div style={{
-                  fontSize: 11, fontWeight: 700, letterSpacing: '0.09em',
-                  color: 'var(--primary-text-muted)', textTransform: 'uppercase', marginBottom: 16,
-                }}>Recommended for you</div>
-                {[
-                  { title: 'Velocity from a position graph', match: 91, tag: 'Next for you', tagColor: '#6366f1' },
-                  { title: 'Newton\'s 3rd law — collision', match: 78, tag: 'Review', tagColor: '#f59e0b' },
-                  { title: 'Kinetic energy + ramp problem', match: 95, tag: 'Ready to master', tagColor: '#22c55e' },
-                ].map(({ title, match, tag, tagColor }) => (
-                  <div key={title} style={{
-                    padding: '12px 14px', borderRadius: 12,
-                    background: 'var(--primary-bg)',
-                    border: '1px solid var(--border-light)',
-                    marginBottom: 10,
-                    display: 'flex', alignItems: 'center', gap: 12,
-                  }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: 10,
-                      background: `${tagColor}18`,
-                      border: `1px solid ${tagColor}40`,
-                      flexShrink: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+              {/* Bottom: Progress details */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
+                {/* Left: skill progress */}
+                <div>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, letterSpacing: '0.09em',
+                    color: 'var(--primary-text-muted)', textTransform: 'uppercase', marginBottom: 16,
+                  }}>Mastery progress</div>
+                  {[
+                    { label: 'Kinematics', pct: 72, color: '#6366f1' },
+                    { label: 'Newton\'s Laws', pct: 45, color: '#8b5cf6' },
+                    { label: 'Energy & Work', pct: 88, color: '#22c55e' },
+                    { label: 'Waves & Sound', pct: 30, color: '#3b82f6' },
+                    { label: 'Thermodynamics', pct: 18, color: '#f59e0b' },
+                  ].map(({ label, pct, color }) => (
+                    <div key={label} style={{ marginBottom: 12 }}>
+                      <div style={{
+                        display: 'flex', justifyContent: 'space-between',
+                        fontSize: 12, marginBottom: 5,
+                      }}>
+                        <span style={{ color: 'var(--primary-text)', fontWeight: 600 }}>{label}</span>
+                        <span style={{ color, fontWeight: 700 }}>{pct}%</span>
+                      </div>
+                      <div style={{
+                        height: 6, background: 'var(--border-light)',
+                        borderRadius: 100, overflow: 'hidden',
+                      }}>
+                        <div style={{
+                          height: '100%', width: `${pct}%`,
+                          background: `linear-gradient(90deg, ${color}aa, ${color})`,
+                          borderRadius: 100,
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Right: recommendation rows */}
+                <div>
+                  <div style={{
+                    fontSize: 11, fontWeight: 700, letterSpacing: '0.09em',
+                    color: 'var(--primary-text-muted)', textTransform: 'uppercase', marginBottom: 16,
+                  }}>Recommended for you</div>
+                  {[
+                    { title: 'Velocity from a position graph', match: 91, tag: 'Next for you', tagColor: '#6366f1' },
+                    { title: 'Newton\'s 3rd law — collision', match: 78, tag: 'Review', tagColor: '#f59e0b' },
+                    { title: 'Kinetic energy + ramp problem', match: 95, tag: 'Ready to master', tagColor: '#22c55e' },
+                  ].map(({ title, match, tag, tagColor }) => (
+                    <div key={title} style={{
+                      padding: '12px 14px', borderRadius: 12,
+                      background: 'var(--primary-bg)',
+                      border: '1px solid var(--border-light)',
+                      marginBottom: 10,
+                      display: 'flex', alignItems: 'center', gap: 12,
                     }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: tagColor }}>{match}%</span>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{
-                        fontSize: 12, fontWeight: 600,
-                        color: 'var(--primary-text)',
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>{title}</div>
-                      <div style={{
-                        fontSize: 10, fontWeight: 700,
-                        color: tagColor, marginTop: 2,
-                      }}>{tag}</div>
+                        width: 36, height: 36, borderRadius: 10,
+                        background: `${tagColor}18`,
+                        border: `1px solid ${tagColor}40`,
+                        flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: tagColor }}>{match}%</span>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          fontSize: 12, fontWeight: 600,
+                          color: 'var(--primary-text)',
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>{title}</div>
+                        <div style={{
+                          fontSize: 10, fontWeight: 700,
+                          color: tagColor, marginTop: 2,
+                        }}>{tag}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>

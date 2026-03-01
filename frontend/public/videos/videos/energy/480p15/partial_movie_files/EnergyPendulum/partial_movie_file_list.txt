@@ -1,0 +1,11 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/1584795214_1839128356_144322218.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/4072820271_1289099914_2522291682.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/4072820271_1734327179_1872106676.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/4072820271_1581396948_772632738.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/4072820271_3255228183_2453167468.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/4072820271_565568636_1876365656.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/4072820271_1734327179_768349121.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/4072820271_4095021528_3649289133.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/4072820271_3001110015_2009459524.mp4'
+file 'file:C:/Users/Asus/.gemini/antigravity/scratch/manim_project/media/videos/energy/480p15/partial_movie_files/EnergyPendulum/4072820271_1839128356_1369703950.mp4'

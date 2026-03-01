@@ -10,7 +10,7 @@ from llm_service import llm_service
 
 from fastapi.staticfiles import StaticFiles
 import os
-from agent import generate_animation_plan, generate_manim_code, fix_manim_code
+from agent import generate_animation_plan, generate_manim_code, fix_manim_code, get_premade_animation
 from manim_runner import run_manim_script, ManimExecutionError
 
 # Create tables
@@ -290,4 +290,12 @@ async def render_video(request: RenderRequest):
                 raise HTTPException(status_code=500, detail=f"Failed to render after {max_retries} attempts. Last error: {e.stderr}")
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/get_animation")
+async def get_animation(request: QuestionRequest):
+    try:
+        result = get_premade_animation(request.question)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
