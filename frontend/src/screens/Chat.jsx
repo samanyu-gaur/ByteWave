@@ -91,7 +91,6 @@ function TypewriterText({ text }) {
   }, [text])
 
   const done = displayed.length >= text.length
-  const parts = formatMessage(displayed)
 
   return (
     <span className="markdown-render-wrapper">
