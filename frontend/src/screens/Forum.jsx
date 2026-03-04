@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef, memo } from 'react'
+import { useState, useMemo, useEffect, memo } from 'react'
 import { useForum } from '../hooks/useForum'
 import PostCard from '../components/PostCard'
 import AppNav from '../components/AppNav'
@@ -15,66 +15,66 @@ function useDebounce(value, delay) {
 
 // ─── Module-level style constants ────────────────────────────────────────────
 const S = {
-  page: { minHeight: '100vh', background: 'var(--primary-bg)' },
-  hero: { background: 'linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%)', borderBottom: '1px solid var(--border-light)', padding: '36px 24px 28px' },
-  heroInner: { maxWidth: 900, margin: '0 auto' },
-  heroTop: { display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 },
-  newBtn: { display: 'flex', alignItems: 'center', gap: 7, padding: '11px 22px', borderRadius: 12, background: 'var(--gradient-accent)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer', flexShrink: 0, boxShadow: '0 4px 14px rgba(99,102,241,0.4)', fontFamily: 'var(--font-display)' },
+  page:     { minHeight: '100vh', background: 'var(--primary-bg)' },
+  hero:     { background: 'linear-gradient(180deg, rgba(99,102,241,0.08) 0%, transparent 100%)', borderBottom: '1px solid var(--border-light)', padding: '36px 24px 28px' },
+  heroInner:{ maxWidth: 900, margin: '0 auto' },
+  heroTop:  { display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 },
+  newBtn:   { display: 'flex', alignItems: 'center', gap: 7, padding: '11px 22px', borderRadius: 12, background: 'var(--gradient-accent)', color: '#fff', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer', flexShrink: 0, boxShadow: '0 4px 14px rgba(99,102,241,0.4)', fontFamily: 'var(--font-display)' },
   statsRow: { display: 'flex', gap: 24, marginTop: 20, flexWrap: 'wrap' },
-  main: { maxWidth: 900, margin: '0 auto', padding: '28px 24px 80px' },
-  toolbar: { display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' },
-  searchWrap: { flex: 1, minWidth: 200, position: 'relative', display: 'flex', alignItems: 'center' },
-  searchIcon: { position: 'absolute', left: 14, color: 'var(--primary-text-muted)', pointerEvents: 'none', display: 'flex' },
-  searchInput: { width: '100%', padding: '11px 16px 11px 40px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'var(--bg-card)', color: 'var(--primary-text)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box', outline: 'none' },
-  sortRow: { display: 'flex', gap: 4, background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: 12, padding: 4 },
+  main:     { maxWidth: 900, margin: '0 auto', padding: '28px 24px 80px' },
+  toolbar:  { display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' },
+  searchWrap:{ flex: 1, minWidth: 200, position: 'relative', display: 'flex', alignItems: 'center' },
+  searchIcon:{ position: 'absolute', left: 14, color: 'var(--primary-text-muted)', pointerEvents: 'none', display: 'flex' },
+  searchInput:{ width: '100%', padding: '11px 16px 11px 40px', borderRadius: 12, border: '1px solid var(--border-medium)', background: 'var(--bg-card)', color: 'var(--primary-text)', fontSize: 14, fontFamily: 'var(--font-body)', boxSizing: 'border-box', outline: 'none' },
+  sortRow:  { display: 'flex', gap: 4, background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: 12, padding: 4 },
   tagStrip: { display: 'flex', gap: 6, marginBottom: 24, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' },
-  emptyWrap: { textAlign: 'center', padding: '80px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 },
-  emptyIcon: { width: 64, height: 64, borderRadius: '50%', background: 'rgba(99,102,241,0.1)', border: '2px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 },
-  feedCol: { display: 'flex', flexDirection: 'column', gap: 10 },
+  emptyWrap:{ textAlign: 'center', padding: '80px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 },
+  emptyIcon:{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(99,102,241,0.1)', border: '2px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 },
+  feedCol:  { display: 'flex', flexDirection: 'column', gap: 10 },
 }
 
 // ─── Stable icon components ───────────────────────────────────────────────────
 const PlusIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
   </svg>
 )
 const SearchIcon = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
   </svg>
 )
 const SpinnerIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
     style={{ animation: 'spin 0.8s linear infinite' }}>
-    <path d="M12 2a10 10 0 0 1 10 10" />
+    <path d="M12 2a10 10 0 0 1 10 10"/>
   </svg>
 )
 const FilmIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
-    <line x1="7" y1="2" x2="7" y2="22" /><line x1="17" y1="2" x2="17" y2="22" />
-    <line x1="2" y1="12" x2="22" y2="12" />
-    <line x1="2" y1="7" x2="7" y2="7" /><line x1="2" y1="17" x2="7" y2="17" />
-    <line x1="17" y1="17" x2="22" y2="17" /><line x1="17" y1="7" x2="22" y2="7" />
+    <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+    <line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/>
+    <line x1="2" y1="12" x2="22" y2="12"/>
+    <line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/>
+    <line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
   </svg>
 )
 
 // ─── AI tag generation ────────────────────────────────────────────────────────
 const TOPIC_KEYWORDS = {
-  '#kinematics': ['kinematics', 'velocity', 'acceleration', 'displacement', 'suvat', 'motion'],
-  '#forces': ['force', 'newton', 'friction', 'tension', 'normal', 'weight', 'pressure'],
-  '#energy': ['energy', 'work', 'power', 'kinetic', 'potential', 'conservation', 'joule'],
-  '#waves': ['wave', 'frequency', 'wavelength', 'amplitude', 'sound', 'longitudinal', 'transverse'],
-  '#light': ['light', 'reflection', 'refraction', 'snell', 'optics', 'lens', 'mirror'],
-  '#electricity': ['current', 'voltage', 'resistance', 'circuit', 'ohm', 'charge', 'electric'],
-  '#magnetism': ['magnet', 'magnetic', 'field', 'solenoid', 'motor', 'induction', 'flux'],
-  '#heat': ['heat', 'temperature', 'thermal', 'conduction', 'convection', 'radiation', 'specific'],
-  '#gravity': ['gravity', 'gravitational', 'orbit', 'satellite', 'weight', 'planet', 'free-fall'],
-  '#atoms': ['atom', 'nuclear', 'decay', 'half-life', 'proton', 'neutron', 'electron', 'radioactive'],
-  '#projectile': ['projectile', 'horizontal', 'vertical', 'trajectory', 'launch', 'angle'],
-  '#free-fall': ['free fall', 'freefall', 'drop', 'falling', 'terminal'],
-  "#Newton's-laws": ['newton', 'inertia', 'action', 'reaction', 'resultant', 'net force'],
+  '#kinematics':    ['kinematics','velocity','acceleration','displacement','suvat','motion'],
+  '#forces':        ['force','newton','friction','tension','normal','weight','pressure'],
+  '#energy':        ['energy','work','power','kinetic','potential','conservation','joule'],
+  '#waves':         ['wave','frequency','wavelength','amplitude','sound','longitudinal','transverse'],
+  '#light':         ['light','reflection','refraction','snell','optics','lens','mirror'],
+  '#electricity':   ['current','voltage','resistance','circuit','ohm','charge','electric'],
+  '#magnetism':     ['magnet','magnetic','field','solenoid','motor','induction','flux'],
+  '#heat':          ['heat','temperature','thermal','conduction','convection','radiation','specific'],
+  '#gravity':       ['gravity','gravitational','orbit','satellite','weight','planet','free-fall'],
+  '#atoms':         ['atom','nuclear','decay','half-life','proton','neutron','electron','radioactive'],
+  '#projectile':    ['projectile','horizontal','vertical','trajectory','launch','angle'],
+  '#free-fall':     ['free fall','freefall','drop','falling','terminal'],
+  "#Newton's-laws": ['newton','inertia','action','reaction','resultant','net force'],
 }
 
 function fallbackTags(text) {
@@ -87,8 +87,7 @@ function fallbackTags(text) {
 
 async function aiGenerateTags(title, body) {
   try {
-    const API_URL = import.meta.env.VITE_API_URL || '';
-    const res = await fetch(`${API_URL}/api/chat`, {
+    const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -99,7 +98,7 @@ async function aiGenerateTags(title, body) {
       })
     })
     if (!res.ok) throw new Error()
-    const data = await res.json()
+    const data  = await res.json()
     const match = (data.reply || '').match(/\[[\s\S]*?\]/)
     return match ? JSON.parse(match[0]) : fallbackTags(title + ' ' + body)
   } catch {
@@ -110,7 +109,7 @@ async function aiGenerateTags(title, body) {
 // ─── New-post modal ───────────────────────────────────────────────────────────
 const NewPostModal = memo(function NewPostModal({ onClose, onSubmit, tagging }) {
   const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
+  const [body, setBody]   = useState('')
   const canSubmit = title.trim().length > 8 && body.trim().length > 10 && !tagging
 
   return (
@@ -166,13 +165,14 @@ function collectTags(posts) {
 }
 
 export default function Forum() {
-  const { posts, upvotePost, hasUpvoted } = useForum()
+  // Single useForum() call — all state from the same context instance
+  const { posts, upvotePost, hasUpvoted, addPost } = useForum()
 
   const [showModal, setShowModal] = useState(false)
-  const [tagging, setTagging] = useState(false)
+  const [tagging, setTagging]     = useState(false)
   const [activeTag, setActiveTag] = useState(null)
   const [rawSearch, setRawSearch] = useState('')
-  const [sort, setSort] = useState('newest')
+  const [sort, setSort]           = useState('newest')
   const [visibleCount, setVisibleCount] = useState(8)
 
   const POSTS_PER_PAGE = 8
@@ -180,12 +180,16 @@ export default function Forum() {
   // Debounce search so useMemo only fires after 250ms idle
   const search = useDebounce(rawSearch, 250)
 
-  const allTags = useMemo(() => collectTags(posts), [posts])
+  const allTags      = useMemo(() => collectTags(posts), [posts])
   const totalReplies = useMemo(() => posts.reduce((s, p) => s + (p.replies?.length ?? 0), 0), [posts])
-  const videoCount = useMemo(() => posts.filter(p => p.videoUrl).length, [posts])
+  const videoCount   = useMemo(() => posts.filter(p => p.videoUrl).length, [posts])
+
+  // Reset pagination when any filter changes — must be useEffect, not inside useMemo
+  useEffect(() => {
+    setVisibleCount(POSTS_PER_PAGE)
+  }, [activeTag, search, sort])
 
   const filtered = useMemo(() => {
-    setVisibleCount(POSTS_PER_PAGE) // reset pagination on any filter change
     let result = posts
     if (activeTag) result = result.filter(p => p.tags?.includes(activeTag))
     if (search.trim()) {
@@ -197,19 +201,14 @@ export default function Forum() {
       )
     }
     if (sort === 'discussed') return [...result].sort((a, b) => (b.replies?.length ?? 0) - (a.replies?.length ?? 0))
-    if (sort === 'top') return [...result].sort((a, b) => (b.upvotes ?? 0) - (a.upvotes ?? 0))
+    if (sort === 'top')       return [...result].sort((a, b) => (b.upvotes ?? 0) - (a.upvotes ?? 0))
     return result
   }, [posts, activeTag, search, sort])
-
-  // Keep addPost in a ref so the modal callback is always fresh without adding deps
-  const addPostRef = useRef(null)
-  const { addPost } = useForum()
-  addPostRef.current = addPost
 
   const handleSubmitSafe = async (title, body) => {
     setTagging(true)
     const tags = await aiGenerateTags(title, body)
-    addPostRef.current(title, body, tags)
+    addPost(title, body, tags)
     setTagging(false)
     setShowModal(false)
   }
@@ -240,9 +239,9 @@ export default function Forum() {
           {/* Stats */}
           <div style={S.statsRow}>
             {[
-              { label: 'Posts', value: posts.length },
-              { label: 'Replies', value: totalReplies },
-              { label: 'Topics', value: allTags.length },
+              { label: 'Posts',      value: posts.length },
+              { label: 'Replies',    value: totalReplies },
+              { label: 'Topics',     value: allTags.length },
               { label: 'Animations', value: videoCount, icon: <FilmIcon /> },
             ].map(({ label, value, icon }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

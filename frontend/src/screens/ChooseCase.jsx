@@ -19,15 +19,14 @@ export default function ChooseCase() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const skillId = searchParams.get('skill') || 'motion'
-  const topic = getTopicById(skillId)
+  const topic   = getTopicById(skillId)
 
-  const [cases, setCases] = useState([])
+  const [cases, setCases]   = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    const API_URL = import.meta.env.VITE_API_URL || '';
-    fetch(`${API_URL}/api/cases/${skillId}`)
+    fetch(`/api/cases/${skillId}`)
       .then(res => res.json())
       .then(data => { setCases(data); setLoading(false) })
       .catch(() => { setCases(MOCK_CASES_BY_SKILL[skillId] || []); setLoading(false) })

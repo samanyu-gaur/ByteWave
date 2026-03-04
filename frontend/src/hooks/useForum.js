@@ -342,11 +342,72 @@ function initPosts() {
   return existing
 }
 
+// ─── Server sync helpers ──────────────────────────────────────────────────────
+
+async function syncAddPostToServer(post) {
+  try {
+    await fetch('/api/forum/posts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(post),
+    })
+  } catch {} // localStorage is the source of truth — server sync is best-effort
+}
+
+async function syncAddReplyToServer(postId, reply) {
+  try {
+    await fetch(`/api/forum/posts/${postId}/replies`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reply),
+    })
+  } catch {}
+}
+
+async function syncUpvoteToServer(postId, userId) {
+  try {
+    await fetch(`/api/forum/posts/${postId}/upvote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    })
+  } catch {}
+}
+
+/**
+ * Attempt to load posts from the server on first mount.
+ * Falls back to localStorage SEED_POSTS if the server is unavailable.
+ */
+async function fetchPostsFromServer() {
+  try {
+    const res = await fetch('/api/forum/posts')
+    if (!res.ok) throw new Error()
+    const serverPosts = await res.json()
+    if (Array.isArray(serverPosts) && serverPosts.length > 0) {
+      // Merge: server posts + local posts not yet on server
+      const local = loadPosts()
+      const serverIds = new Set(serverPosts.map(p => p.id))
+      const localOnly = local.filter(p => !serverIds.has(p.id) && !SEED_IDS.includes(p.id))
+      const merged = [...serverPosts, ...localOnly]
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged))
+      return merged
+    }
+  } catch {}
+  return null
+}
+
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useForum() {
   const [posts,   setPosts]   = useState(() => initPosts())
   const [upvoted, setUpvoted] = useState(() => loadUpvoted())
+
+  // On mount, try to pull fresh posts from the server
+  useEffect(() => {
+    fetchPostsFromServer().then(serverPosts => {
+      if (serverPosts) setPosts(serverPosts)
+    })
+  }, [])
 
   // Sync from localStorage whenever another instance mutates it
   useEffect(() => {
@@ -381,6 +442,7 @@ export function useForum() {
     persistAll(nextPosts, currentUpvoted)
     setPosts(nextPosts)
     setUpvoted(new Set(currentUpvoted))
+    syncUpvoteToServer(postId, 'local-user') // best-effort
   }, []) // stable — no deps on React state
 
   // ── Upvote a reply ────────────────────────────────────────────────────────
@@ -421,6 +483,7 @@ export function useForum() {
       persistAll(next, undefined)
       return next
     })
+    syncAddPostToServer(newPost) // best-effort server sync
     return newPost.id
   }, [])
 
@@ -437,6 +500,7 @@ export function useForum() {
       persistAll(next, undefined)
       return next
     })
+    syncAddReplyToServer(postId, newReply) // best-effort server sync
   }, [])
 
   const getPost    = useCallback((id) => posts.find(p => p.id === id) ?? null, [posts])

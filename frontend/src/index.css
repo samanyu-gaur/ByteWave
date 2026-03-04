@@ -94,8 +94,8 @@ html[data-theme="dark"] {
 /* ─── Light theme overrides ─── */
 html[data-theme="light"] {
   --bg-dark:              #f0f0f8;
-  --bg-card:              rgba(0, 0, 0, 0.04);
-  --bg-card-hover:        rgba(0, 0, 0, 0.07);
+  --bg-card:              rgba(255, 255, 255, 0.85);
+  --bg-card-hover:        rgba(255, 255, 255, 0.95);
   --bg-glass:             rgba(255, 255, 255, 0.82);
   --bg-glass-strong:      rgba(255, 255, 255, 0.95);
 
@@ -113,9 +113,28 @@ html[data-theme="light"] {
   --border-light:         rgba(0, 0, 0, 0.09);
   --border-medium:        rgba(0, 0, 0, 0.14);
 
+  /* Accents – same hues, readable on light bg */
+  --accent-main:          #4f46e5;
+  --accent-hover:         #6366f1;
+  --accent-success:       #059669;
+  --accent-warning:       #d97706;
+  --accent-neutral:       #64748b;
+
+  /* Skill states */
+  --skill-not-started:    #9ca3af;
+  --skill-in-progress:    #d97706;
+  --skill-mastered:       #059669;
+
+  /* Recommendation match colours */
+  --rec-high:             #4f46e5;
+  --rec-mid:              #7c3aed;
+  --rec-low:              #9333ea;
+
+  /* Gradients */
   --gradient-hero:
     radial-gradient(ellipse 80% 60% at 50% -20%, rgba(99, 102, 241, 0.18), transparent 60%),
     linear-gradient(180deg, #f0f0f8 0%, #e8e8f4 50%, #f0f0f8 100%);
+  --gradient-accent:      linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   --gradient-card:        linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.5) 100%);
 }
 
@@ -731,4 +750,9 @@ div[style*="backdrop-filter"] {
   /* ── Typography scale-down ── */
   h1.text-h1 { font-size: 22px !important; }
   h1.text-h2 { font-size: 18px !important; }
+}
+
+/* ── PhysiMate animation panel spinner ── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

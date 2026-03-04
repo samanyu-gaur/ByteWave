@@ -1,81 +1,135 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
 import Skeleton from '../components/Skeleton'
-import MasteryScore from '../components/MasteryScore'
 import TopicIcon from '../components/TopicIcon'
-import { FormulaBadge } from '../components/PhysicsGraphic'
-import { MOCK_RECOMMENDATIONS } from '../mockData'
+import OnboardingFlow, { useOnboarding } from '../components/OnboardingFlow'
+import { useAuth, useUserId } from '../hooks/useAuth'
+import { track, EVENTS } from '../hooks/useAnalytics'
+import { MOCK_RECOMMENDATIONS, MOCK_PROGRESS } from '../mockData'
 
-/* ── small arrow icon ── */
-const ArrowRight = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+// ─── Tiny icon set ───────────────────────────────────────────────────────────
+const IcoArrow = () => (
+  <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M5 12h14M12 5l7 7-7 7" />
   </svg>
 )
+const IcoStar = () => (
+  <svg width={13} height={13} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+)
+const IcoFlame = () => (
+  <svg width={13} height={13} viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c0 0-4 4-4 9a4 4 0 0 0 8 0c0-1.5-.5-3-1.5-4.5C14 8 12 10 12 12c0-4-4-6-4-6s1 3 0 5c0-5 4-9 4-9z"/></svg>
+)
+const IcoZap = () => (
+  <svg width={13} height={13} viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+)
+const IcoCheck = () => (
+  <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+)
 
+// ─── Match colour helper ──────────────────────────────────────────────────────
 const matchColor = (pct) =>
-  pct >= 85 ? 'var(--accent-success)' : pct >= 65 ? 'var(--accent-warning)' : 'var(--rec-low)'
+  pct >= 85 ? 'var(--accent-success)' : pct >= 65 ? 'var(--accent-warning)' : '#818cf8'
 
-/* ── Next for you — horizontal pill card ── */
-function NextCard({ title, matchPercent, topicId, reason, onClick }) {
-  const [hover, setHover] = useState(false)
+// ─── Stat chip ───────────────────────────────────────────────────────────────
+function StatChip({ icon, value, label, color = '#818cf8' }) {
   return (
-    <button
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '16px 20px', borderRadius: 16,
+      background: 'var(--bg-card)',
+      border: '1px solid var(--border-light)',
+      flex: '1 1 140px', minWidth: 0,
+    }}>
+      <div style={{
+        width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+        background: `${color}18`,
+        border: `1px solid ${color}30`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color,
+      }}>
+        {icon}
+      </div>
+      <div>
+        <div style={{
+          fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800,
+          color: 'var(--primary-text)', lineHeight: 1, marginBottom: 3,
+        }}>{value}</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          {label}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Feature card (Next for you) ─────────────────────────────────────────────
+function HeroRecommCard({ title, matchPercent, topicId, reason, onClick }) {
+  const [hover, setHover] = useState(false)
+  const color = matchColor(matchPercent)
+  return (
+    <motion.button
       type="button"
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onHoverStart={() => setHover(true)}
+      onHoverEnd={() => setHover(false)}
+      whileHover={{ y: -3 }}
+      transition={{ duration: 0.18 }}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        padding: '14px 18px',
-        borderRadius: 14,
-        background: hover ? 'var(--bg-card-hover)' : 'var(--bg-card)',
-        border: '1px solid var(--border-light)',
-        borderLeft: `3px solid ${matchColor(matchPercent)}`,
-        cursor: 'pointer',
-        textAlign: 'left',
-        transition: 'background 0.15s ease, transform 0.2s ease, box-shadow 0.2s ease',
-        transform: hover ? 'translateY(-2px)' : 'none',
-        boxShadow: hover ? '0 8px 24px rgba(0,0,0,0.15)' : 'none',
-        width: '100%',
+        display: 'flex', alignItems: 'center', gap: 16,
+        padding: '18px 20px', borderRadius: 18, width: '100%',
+        background: hover
+          ? 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.06))'
+          : 'var(--bg-card)',
+        border: `1.5px solid ${hover ? 'rgba(99,102,241,0.35)' : 'var(--border-light)'}`,
+        borderLeft: `3px solid ${color}`,
+        cursor: 'pointer', textAlign: 'left',
+        boxShadow: hover ? '0 10px 32px rgba(99,102,241,0.12)' : '0 1px 4px rgba(0,0,0,0.06)',
+        transition: 'border-color 0.2s, background 0.2s, box-shadow 0.2s',
       }}
     >
       <TopicIcon topicId={topicId} size="small" />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 15, color: 'var(--primary-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</p>
-        {reason && <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--primary-text-muted)' }}>{reason}</p>}
+        <p style={{
+          margin: 0, fontWeight: 700, fontSize: 15,
+          color: 'var(--primary-text)',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {title}
+        </p>
+        {reason && (
+          <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--primary-text-muted)', lineHeight: 1.4 }}>
+            {reason}
+          </p>
+        )}
       </div>
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <p style={{ margin: 0, fontFamily: 'var(--font-readout)', fontWeight: 700, fontSize: 16, color: matchColor(matchPercent) }}>{matchPercent}%</p>
-        <p style={{ margin: 0, fontSize: 10, color: 'var(--primary-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>match</p>
+      <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          background: `${color}15`, border: `1px solid ${color}30`,
+          borderRadius: 8, padding: '3px 10px',
+        }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 15, color }}>{matchPercent}%</span>
+        </div>
+        <span style={{ fontSize: 10, color: 'var(--primary-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>match</span>
       </div>
-    </button>
+    </motion.button>
   )
 }
 
-/* ── Review / Ready to master — compact row card ── */
+// ─── Compact row card ─────────────────────────────────────────────────────────
 function RowCard({ title, reason, topicId, tag, tagColor, onClick }) {
   const [hover, setHover] = useState(false)
   return (
     <button
-      type="button"
-      onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      type="button" onClick={onClick}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        padding: '12px 16px',
-        borderRadius: 12,
+        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+        borderRadius: 12, width: '100%', cursor: 'pointer', textAlign: 'left',
         background: hover ? 'var(--bg-card-hover)' : 'var(--bg-card)',
         border: '1px solid var(--border-light)',
-        cursor: 'pointer',
-        textAlign: 'left',
-        transition: 'background 0.15s ease',
-        width: '100%',
+        transition: 'background 0.15s',
       }}
     >
       <TopicIcon topicId={topicId} size="small" />
@@ -84,233 +138,426 @@ function RowCard({ title, reason, topicId, tag, tagColor, onClick }) {
         {reason && <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--primary-text-muted)' }}>{reason}</p>}
       </div>
       {tag && (
-        <span style={{ fontSize: 11, fontWeight: 700, color: tagColor, background: `${tagColor}18`, padding: '3px 8px', borderRadius: 20, flexShrink: 0 }}>
+        <span style={{
+          fontSize: 11, fontWeight: 700, color: tagColor,
+          background: `${tagColor}15`, padding: '3px 9px', borderRadius: 20, flexShrink: 0,
+          border: `1px solid ${tagColor}25`,
+        }}>
           {tag}
         </span>
       )}
-      <span style={{ color: 'var(--primary-text-muted)', flexShrink: 0 }}><ArrowRight /></span>
+      <span style={{ color: 'var(--primary-text-muted)', flexShrink: 0 }}><IcoArrow /></span>
     </button>
   )
 }
 
-/* ── Section label ── */
-function SectionLabel({ title, sub }) {
+// ─── Mastery ring ─────────────────────────────────────────────────────────────
+function MasteryRing({ percent = 0, label = 'Overall', size = 100 }) {
+  const r = (size - 10) / 2
+  const circ = 2 * Math.PI * r
+  const color = percent >= 80 ? 'var(--accent-success)' : percent >= 50 ? 'var(--accent-warning)' : '#818cf8'
   return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-        <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: 'var(--primary-text)' }}>{title}</h2>
-        {sub && <span style={{ fontSize: 12, fontFamily: 'var(--font-formula)', fontStyle: 'italic', color: 'var(--primary-text-muted)' }}>{sub}</span>}
-      </div>
-      <div style={{ height: 1, background: 'var(--border-light)', marginTop: 8 }} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+      <svg width={size} height={size}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border-light)" strokeWidth={8} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r}
+          fill="none" stroke={color} strokeWidth={8}
+          strokeDasharray={circ}
+          strokeDashoffset={circ * (1 - Math.min(percent, 100) / 100)}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          style={{ transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)', filter: `drop-shadow(0 0 6px ${color}60)` }}
+        />
+        <text x={size / 2} y={size / 2 + 7} textAnchor="middle"
+          fontSize={18} fontWeight="800" fill={color}
+          fontFamily="var(--font-display)">
+          {percent}%
+        </text>
+      </svg>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary-text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+        {label}
+      </span>
     </div>
   )
 }
 
-const NAME_KEY = 'bw_name'
+// ─── Topic progress row ───────────────────────────────────────────────────────
+function TopicProgressRow({ name, mastery, status, onClick }) {
+  const color = status === 'Mastered' ? 'var(--accent-success)' : status === 'In progress' ? 'var(--accent-warning)' : 'var(--border-medium)'
+  return (
+    <button
+      type="button" onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+        borderRadius: 10, background: 'none', border: 'none', cursor: 'pointer',
+        width: '100%', textAlign: 'left',
+      }}
+    >
+      <div style={{
+        width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0,
+        boxShadow: status !== 'Not started' ? `0 0 6px ${color}` : 'none',
+      }} />
+      <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: 'var(--primary-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {name}
+      </span>
+      <div style={{ width: 60, height: 4, borderRadius: 99, background: 'var(--border-light)', overflow: 'hidden', flexShrink: 0 }}>
+        <div style={{ height: '100%', width: `${mastery}%`, background: color, borderRadius: 99, transition: 'width 1s ease' }} />
+      </div>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary-text-muted)', width: 28, textAlign: 'right', flexShrink: 0 }}>
+        {mastery}%
+      </span>
+    </button>
+  )
+}
 
+// ─── Section header ───────────────────────────────────────────────────────────
+function SectionHeader({ title, action, onAction }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+      <h2 style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--primary-text)', letterSpacing: '-0.01em' }}>
+        {title}
+      </h2>
+      {action && (
+        <button type="button" onClick={onAction} style={{
+          background: 'none', border: 'none', color: '#818cf8', fontSize: 12,
+          fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          {action} <IcoArrow />
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ─── Main dashboard ───────────────────────────────────────────────────────────
 export default function Home() {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const location  = useLocation()
+  const { user }  = useAuth()
+  const userId    = useUserId()
+  const { shouldShow, markDone } = useOnboarding()
+
+  // Only show onboarding if not coming from a fresh auth redirect
+  const fromAuth = location.state?.fromAuth
+  const [showOnboarding, setShowOnboarding] = useState(() => shouldShow && !fromAuth)
+
   const [recommendations, setRecommendations] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  // First-name personalization
-  const [name, setName] = useState(() => localStorage.getItem(NAME_KEY) || '')
-  const [nameInput, setNameInput] = useState('')
-  const [showNamePrompt, setShowNamePrompt] = useState(() => !localStorage.getItem(NAME_KEY))
-
-  const saveName = () => {
-    const trimmed = nameInput.trim()
-    if (!trimmed) return
-    localStorage.setItem(NAME_KEY, trimmed)
-    setName(trimmed)
-    setShowNamePrompt(false)
-  }
+  const [progress,        setProgress]        = useState([])
+  const [loading,         setLoading]         = useState(true)
 
   useEffect(() => {
-    const API_URL = import.meta.env.VITE_API_URL || '';
-    fetch(`${API_URL}/api/recommendations/1`)
-      .then(res => res.json())
-      .then(data => { setRecommendations(data); setLoading(false) })
-      .catch(() => { setRecommendations(MOCK_RECOMMENDATIONS); setLoading(false) })
-  }, [])
+    track(EVENTS.SKILL_MAP_OPENED)
+    Promise.all([
+      fetch(`/api/recommendations/${userId}`).then(r => { if (!r.ok) throw new Error(); return r.json() }),
+      fetch(`/api/progress/${userId}`).then(r => { if (!r.ok) throw new Error(); return r.json() }),
+    ])
+      .then(([recs, prog]) => {
+        setRecommendations(Array.isArray(recs) ? recs : MOCK_RECOMMENDATIONS)
+        setProgress(Array.isArray(prog) ? prog : MOCK_PROGRESS)
+        setLoading(false)
+      })
+      .catch(() => {
+        setRecommendations(MOCK_RECOMMENDATIONS)
+        setProgress(MOCK_PROGRESS)
+        setLoading(false)
+      })
+  }, [userId])
 
-  const nextForYou = recommendations.filter(r => r.recommendation_type === 'Next for you')
-  const review = recommendations.filter(r => r.recommendation_type === 'Review')
+  const nextForYou    = recommendations.filter(r => r.recommendation_type === 'Next for you')
+  const review        = recommendations.filter(r => r.recommendation_type === 'Review')
   const readyToMaster = recommendations.filter(r => r.recommendation_type === 'Ready to master')
 
-  const masteryPercent = useMemo(() => {
-    if (!recommendations.length) return 0
-    const scores = recommendations.map(r => r.mastery_score ?? r.match_score ?? 0)
-    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-  }, [recommendations])
+  const stats = useMemo(() => {
+    const mastered   = progress.filter(n => n.status === 'Mastered').length
+    const inProgress = progress.filter(n => n.status === 'In progress').length
+    const overallPct = progress.length
+      ? Math.round(progress.reduce((s, n) => s + (n.mastery_score ?? 0), 0) / progress.length)
+      : 0
+    return { mastered, inProgress, overallPct }
+  }, [progress])
 
-  const displayName = name || 'Student'
+  const displayName = user?.name || 'Student'
+  const goToCase    = (skillId) => { track(EVENTS.CASE_STARTED, { skill: skillId }); navigate('/learn/choose-case?skill=' + skillId) }
+
+  const handleOnboardingDone = () => {
+    markDone()
+    setShowOnboarding(false)
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+    <>
+      <AnimatePresence>
+        {showOnboarding && (
+          <OnboardingFlow key="onboarding" onDone={handleOnboardingDone} />
+        )}
+      </AnimatePresence>
 
-      {/* ── Name prompt banner ── */}
-      {showNamePrompt && (
-        <div style={{
-          padding: '14px 18px',
-          background: 'rgba(99,102,241,0.07)',
-          border: '1px solid rgba(99,102,241,0.22)',
-          borderRadius: 14,
-          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
-        }}>
-          <span style={{ fontSize: 14, color: 'var(--primary-text)', fontWeight: 600, flex: '1 1 auto' }}>
-            What should we call you?
-          </span>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <input
-              autoFocus
-              value={nameInput}
-              onChange={e => setNameInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && saveName()}
-              placeholder="Your first name…"
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 28, maxWidth: 1100, margin: '0 auto' }}>
+
+        {/* ── Greeting ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <h1 style={{
+              margin: '0 0 4px', fontFamily: 'var(--font-display)',
+              fontSize: 28, fontWeight: 800, color: 'var(--primary-text)', letterSpacing: '-0.03em',
+            }}>
+              {getGreeting()}, {displayName} 👋
+            </h1>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--primary-text-muted)' }}>
+              Your personalised physics study plan — pick up where you left off.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => navigate('/learn/skill-map')}
               style={{
-                padding: '7px 12px', borderRadius: 8,
-                border: '1.5px solid var(--border-light)',
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 16px', borderRadius: 10,
+                border: '1px solid var(--border-medium)',
                 background: 'var(--bg-card)', color: 'var(--primary-text)',
-                fontSize: 14, width: 160,
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
               }}
-            />
+            >
+              Skill map <IcoArrow />
+            </button>
             <button
               type="button"
-              onClick={saveName}
+              onClick={() => navigate('/chat')}
               style={{
-                padding: '7px 16px', borderRadius: 8,
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 16px', borderRadius: 10,
                 background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
-                color: '#fff', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
+                border: 'none', color: '#fff',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(99,102,241,0.35)',
               }}
-            >Save</button>
-            <button
-              type="button"
-              onClick={() => setShowNamePrompt(false)}
-              style={{
-                padding: '7px 10px', borderRadius: 8,
-                background: 'none', border: '1px solid var(--border-light)',
-                color: 'var(--primary-text-muted)', fontSize: 13, cursor: 'pointer',
-              }}
-            >Skip</button>
+            >
+              Ask AI <IcoZap />
+            </button>
           </div>
         </div>
-      )}
 
-      {/* ── Header ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-            <h1 className="text-h1" style={{ margin: 0 }}>Hi, {displayName}</h1>
-            <FormulaBadge formula="ΣF = ma" />
+        {/* ── Stats row ── */}
+        {loading ? (
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {[0, 1, 2, 3].map(i => <Skeleton key={i} height={70} borderRadius={16} style={{ flex: '1 1 140px' }} delay={i * 0.1} />)}
           </div>
-          <p className="text-body-small" style={{ margin: 0 }}>Here's your personalised study plan.</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate('/learn/skill-map')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '9px 18px',
-            borderRadius: 10,
-            border: '1px solid var(--border-medium)',
-            background: 'var(--bg-card)',
-            color: 'var(--primary-text)',
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          Full skill map <ArrowRight />
-        </button>
-      </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <StatChip icon={<IcoStar />}  value={`${stats.overallPct}%`} label="Overall mastery" color="var(--accent-success)" />
+            <StatChip icon={<IcoFlame />} value={stats.mastered}          label="Topics mastered" color="#f59e0b" />
+            <StatChip icon={<IcoZap />}   value={stats.inProgress}        label="In progress"     color="#818cf8" />
+            <StatChip icon={<IcoCheck />} value={nextForYou.length}       label="Recommended"     color="#34d399" />
+          </div>
+        )}
 
-      {/* ── Overall mastery ── */}
-      <MasteryScore label="Overall Physics" percent={loading ? 0 : masteryPercent} />
+        {/* ── Main grid ── */}
+        <div id="home-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 280px', gap: 20, alignItems: 'start' }}>
 
-      {loading ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[1, 2, 3].map(i => (
-            <Skeleton key={i} height={60} borderRadius={14} delay={i * 0.12} />
-          ))}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          {/* ── Left column ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, minWidth: 0 }}>
 
-          {/* ── Next for you ── */}
-          {nextForYou.length > 0 && (
-            <div>
-              <SectionLabel title="Next for you" sub="high match → start here" />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {nextForYou.map(t => (
-                  <NextCard
-                    key={t.item_id}
-                    title={t.item_name}
-                    matchPercent={Math.round(t.match_score)}
-                    topicId={t.item_id}
-                    reason={t.reason}
-                    onClick={() => navigate('/learn/choose-case?skill=' + t.item_id)}
-                  />
-                ))}
-              </div>
+            {/* Next for you */}
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-light)',
+              borderRadius: 20, padding: '20px 20px 16px',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+            }}>
+              <SectionHeader title="⚡ Next for you" action="See all" onAction={() => navigate('/learn/skill-map')} />
+              {loading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[0, 1, 2].map(i => <Skeleton key={i} height={72} borderRadius={14} delay={i * 0.12} />)}
+                </div>
+              ) : nextForYou.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {nextForYou.map(t => (
+                    <HeroRecommCard
+                      key={t.item_id}
+                      title={t.item_name}
+                      matchPercent={Math.round(t.match_score ?? 0)}
+                      topicId={t.item_id}
+                      reason={t.reason}
+                      onClick={() => goToCase(t.item_id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState message="No recommendations yet — complete a case to calibrate." cta="Browse skill map" onCta={() => navigate('/learn/skill-map')} />
+              )}
             </div>
-          )}
 
-          {/* ── Review + Ready to master side by side on wide screens ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 28 }}>
-
-            {review.length > 0 && (
-              <div>
-                <SectionLabel title="Review" sub="keep it sharp" />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {review.map(t => (
-                    <RowCard
-                      key={t.item_id}
-                      title={t.item_name}
-                      reason={t.reason}
-                      topicId={t.item_id}
-                      tag="Review"
-                      tagColor="var(--accent-warning)"
-                      onClick={() => navigate('/learn/choose-case?skill=' + t.item_id)}
-                    />
-                  ))}
-                </div>
+            {/* Review + Ready to master side by side */}
+            {(review.length > 0 || readyToMaster.length > 0) && !loading && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                {review.length > 0 && (
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: 18, padding: '16px 16px 12px' }}>
+                    <SectionHeader title="🔁 Review" />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {review.map(t => (
+                        <RowCard key={t.item_id} title={t.item_name} reason={t.reason} topicId={t.item_id} tag="Review" tagColor="var(--accent-warning)" onClick={() => goToCase(t.item_id)} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {readyToMaster.length > 0 && (
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: 18, padding: '16px 16px 12px' }}>
+                    <SectionHeader title="🏆 Close to mastered" />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {readyToMaster.map(t => (
+                        <RowCard key={t.item_id} title={t.item_name} reason={t.reason} topicId={t.item_id} tag="Almost!" tagColor="var(--accent-success)" onClick={() => goToCase(t.item_id)} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {readyToMaster.length > 0 && (
-              <div>
-                <SectionLabel title="Ready to master" sub="Δ mastery ≈ 0" />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {readyToMaster.map(t => (
-                    <RowCard
-                      key={t.item_id}
-                      title={t.item_name}
-                      reason={t.reason}
-                      topicId={t.item_id}
-                      tag="Close!"
-                      tagColor="var(--accent-success)"
-                      onClick={() => navigate('/learn/choose-case?skill=' + t.item_id)}
-                    />
-                  ))}
-                </div>
-              </div>
+            {/* Quick start CTA if no recs */}
+            {!loading && nextForYou.length === 0 && review.length === 0 && (
+              <QuickStartPanel onStart={() => navigate('/learn/choose-case?skill=motion')} />
             )}
           </div>
 
-          {nextForYou.length === 0 && review.length === 0 && readyToMaster.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--primary-text-muted)' }}>
-              <p style={{ fontSize: 16, margin: '0 0 12px' }}>No recommendations yet.</p>
-              <button type="button" onClick={() => navigate('/learn/skill-map')} style={{ color: 'var(--accent-main)', background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 15 }}>
-                Browse the skill map →
+          {/* ── Right sidebar ── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* Mastery ring */}
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-light)',
+              borderRadius: 20, padding: '20px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+              boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+            }}>
+              {loading
+                ? <Skeleton height={100} borderRadius={50} style={{ width: 100 }} />
+                : <MasteryRing percent={stats.overallPct} label="Overall mastery" size={110} />
+              }
+              {!loading && (
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {[
+                    { color: 'var(--accent-success)', label: 'Mastered' },
+                    { color: 'var(--accent-warning)', label: 'Learning' },
+                    { color: 'var(--border-medium)',  label: 'New' },
+                  ].map(({ color, label }) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: color }} />
+                      <span style={{ fontSize: 11, color: 'var(--primary-text-muted)', fontWeight: 600 }}>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Topic progress list */}
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-light)',
+              borderRadius: 20, padding: '16px 12px',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+            }}>
+              <SectionHeader title="Topic progress" action="Full map" onAction={() => navigate('/learn/skill-map')} />
+              {loading
+                ? Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} height={32} borderRadius={8} delay={i * 0.08} style={{ marginBottom: 4 }} />)
+                : progress.slice(0, 7).map(n => (
+                    <TopicProgressRow
+                      key={n.skill_id}
+                      name={n.skill_name}
+                      mastery={n.mastery_score ?? 0}
+                      status={n.status}
+                      onClick={() => navigate('/learn/skill-map')}
+                    />
+                  ))
+              }
+            </div>
+
+            {/* Ask PhysiMate CTA */}
+            <div style={{
+              borderRadius: 20, padding: '18px',
+              background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.08))',
+              border: '1px solid rgba(99,102,241,0.25)',
+            }}>
+              <div style={{ fontSize: 20, marginBottom: 8 }}>🤖</div>
+              <p style={{ margin: '0 0 6px', fontSize: 13, fontWeight: 700, color: 'var(--primary-text)' }}>Got a physics question?</p>
+              <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--primary-text-muted)', lineHeight: 1.5 }}>
+                Ask PhysiMate — it generates an animated explanation and simulation.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/chat')}
+                style={{
+                  padding: '9px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700,
+                  background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                  color: '#fff', border: 'none', cursor: 'pointer',
+                  width: '100%', boxShadow: '0 4px 12px rgba(99,102,241,0.3)',
+                }}
+              >
+                Open AI Chat →
               </button>
             </div>
-          )}
-
+          </div>
         </div>
+
+        {/* Responsive fix for small screens */}
+        <style>{`
+          @media (max-width: 760px) {
+            #home-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+      </div>
+    </>
+  )
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function getGreeting() {
+  const h = new Date().getHours()
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
+}
+
+function EmptyState({ message, cta, onCta }) {
+  return (
+    <div style={{ textAlign: 'center', padding: '28px 16px' }}>
+      <div style={{ fontSize: 32, marginBottom: 10, opacity: 0.5 }}>🔭</div>
+      <p style={{ fontSize: 14, color: 'var(--primary-text-muted)', margin: '0 0 12px' }}>{message}</p>
+      {cta && (
+        <button type="button" onClick={onCta} style={{
+          background: 'none', border: 'none', color: '#818cf8',
+          fontWeight: 700, fontSize: 14, cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+        }}>
+          {cta} <IcoArrow />
+        </button>
       )}
+    </div>
+  )
+}
+
+function QuickStartPanel({ onStart }) {
+  return (
+    <div style={{
+      borderRadius: 20, padding: '28px 24px', textAlign: 'center',
+      background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05))',
+      border: '1px dashed rgba(99,102,241,0.3)',
+    }}>
+      <div style={{ fontSize: 40, marginBottom: 12 }}>🚀</div>
+      <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 800, margin: '0 0 8px', color: 'var(--primary-text)' }}>
+        Ready to find your first gap?
+      </h3>
+      <p style={{ fontSize: 14, color: 'var(--primary-text-muted)', margin: '0 0 20px', lineHeight: 1.6 }}>
+        Complete your first case and the AI will build your personalised plan.
+      </p>
+      <button type="button" onClick={onStart} style={{
+        padding: '12px 28px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+        background: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+        color: '#fff', border: 'none', cursor: 'pointer',
+        boxShadow: '0 6px 20px rgba(99,102,241,0.4)',
+      }}>
+        Start first case →
+      </button>
     </div>
   )
 }

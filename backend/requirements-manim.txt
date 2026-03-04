@@ -1,0 +1,2 @@
+# Install after core deps. On macOS first run: brew install cairo pkg-config ffmpeg
+manim>=0.18.0

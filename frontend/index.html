@@ -3,13 +3,40 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Byte Wave</title>
+
+    <!-- Primary SEO -->
+    <title>Byte Wave — AI Physics Tutor That Finds Your Exact Knowledge Gaps</title>
+    <meta name="description" content="Stop re-reading textbooks. Byte Wave uses AI to analyze your answers, pinpoint exactly where your physics understanding breaks down, and tell you precisely what to study next. Free for high school students." />
+    <meta name="keywords" content="AI physics tutor, high school physics, physics learning, gap analysis, personalized learning, kinematics, Newton's laws, AI education" />
+    <link rel="canonical" href="https://bytewave.app" />
+
+    <!-- Open Graph (Facebook / Discord / WhatsApp) -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://bytewave.app" />
+    <meta property="og:title"       content="Byte Wave — AI Physics Tutor That Finds Your Exact Knowledge Gaps" />
+    <meta property="og:description" content="Answer real physics cases. The AI pinpoints exactly where your thinking breaks down and tells you what to study next — like a personal tutor, always on." />
+    <meta property="og:image"       content="https://bytewave.app/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content="Byte Wave — AI Physics Tutor" />
+    <meta name="twitter:description" content="Stop guessing what to study. Byte Wave's AI finds your exact physics gaps and builds your personalized study path." />
+    <meta name="twitter:image"       content="https://bytewave.app/og-image.png" />
+
+    <!-- Theme / PWA -->
+    <meta name="theme-color" content="#060614" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;600;700&family=Source+Serif+4:ital,wght@0,600;1,600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
+    <!-- Matter.js + PhysiMate interactive simulator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="/physimate-simulator.js"></script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
