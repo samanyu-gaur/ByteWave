@@ -227,7 +227,7 @@ function SplineHero() {
     }
   }, [])
 
-  if (IS_MOBILE || failed) return <CSSFallbackBG />
+  if (true) return <CSSFallbackBG />
 
   return (
     <div style={{ position: 'absolute', inset: 0, background: '#060614', overflow: 'hidden' }}>
