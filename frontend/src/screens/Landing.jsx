@@ -256,34 +256,87 @@ function SplineHero() {
   )
 }
 
-// Lightweight pure-CSS fallback shown only if Spline CDN is unreachable
+// CSS based animated wave background
 function CSSFallbackBG() {
   return (
-    <>
+    <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#060614' }}>
+      {/* ── Core ambient glow ── */}
       <div style={{
         position: 'absolute', width: '90vw', height: '90vw',
         maxWidth: 1000, maxHeight: 1000, borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.04) 45%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, rgba(99,102,241,0.03) 45%, transparent 70%)',
         top: '50%', left: '50%', transform: 'translate(-50%, -58%)', pointerEvents: 'none',
       }} />
-      <div style={{
-        position: 'absolute', width: '55vw', height: '55vw',
-        maxWidth: 650, maxHeight: 650, borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(139,92,246,0.11) 0%, transparent 65%)',
-        bottom: '0%', right: '-8%', willChange: 'transform',
-        animation: 'css-orb 22s ease-in-out infinite', pointerEvents: 'none',
-      }} />
-      {['F = ma', 'E = mc²', 'v = fλ', 'p = mv', 'ω = 2πf'].map((t, i) => (
+
+      {/* ── Animated Waves ── */}
+      <div className="wave-container" style={{ position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none' }}>
+        <div className="wave wave1"></div>
+        <div className="wave wave2"></div>
+        <div className="wave wave3"></div>
+      </div>
+
+      {/* ── Floating Physics Formulas ── */}
+      {['F = ma', 'E = mc²', 'v = fλ', 'p = mv', 'ω = 2πf', 'F = G m₁m₂/r²'].map((t, i) => (
         <span key={t} style={{
           position: 'absolute',
-          left: `${10 + i * 18}%`, top: `${20 + (i % 3) * 25}%`,
-          color: 'rgba(129,140,248,0.18)', fontFamily: 'monospace',
-          fontSize: 12, fontWeight: 600, letterSpacing: '0.05em',
+          left: `${15 + (i * 12)}%`, top: `${20 + (i % 4) * 18}%`,
+          color: 'rgba(129,140,248,0.25)', fontFamily: 'monospace',
+          fontSize: 14, fontWeight: 600, letterSpacing: '0.05em',
           animation: `css-float ${12 + i * 1.5}s ${i * 1.2}s ease-in-out infinite`,
           pointerEvents: 'none', userSelect: 'none',
+          textShadow: '0 0 10px rgba(129,140,248,0.2)'
         }}>{t}</span>
       ))}
-    </>
+
+      {/* ── CSS Keyframes for waves and floating ── */}
+      <style>{`
+        .wave-container {
+          perspective: 1000px;
+        }
+        .wave {
+          position: absolute;
+          bottom: -20vh;
+          left: -50vw;
+          width: 200vw;
+          height: 60vh;
+          background: linear-gradient(180deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.1) 40%, transparent 100%);
+          border-radius: 40% 60% 50% 50% / 100% 100% 0% 0%;
+          transform-origin: 50% 100%;
+          mix-blend-mode: screen;
+        }
+        .wave1 {
+          animation: wave-motion 15s linear infinite;
+          z-index: 1;
+          opacity: 0.7;
+        }
+        .wave2 {
+          animation: wave-motion 20s linear infinite reverse;
+          background: linear-gradient(180deg, rgba(139,92,246,0.15) 0%, rgba(99,102,241,0.1) 40%, transparent 100%);
+          z-index: 2;
+          opacity: 0.5;
+          bottom: -25vh;
+        }
+        .wave3 {
+          animation: wave-motion 12s linear infinite;
+          background: linear-gradient(180deg, rgba(56,189,248,0.1) 0%, rgba(99,102,241,0.05) 40%, transparent 100%);
+          z-index: 3;
+          opacity: 0.4;
+          bottom: -15vh;
+        }
+
+        @keyframes wave-motion {
+          0% { transform: rotate(0deg) scale(1) translate3d(0, 0, 0); border-radius: 40% 60% 50% 50% / 100% 100% 0% 0%; }
+          33% { transform: rotate(120deg) scale(1.05) translate3d(20px, 10px, 0); border-radius: 50% 50% 40% 60% / 100% 100% 0% 0%; }
+          66% { transform: rotate(240deg) scale(0.95) translate3d(-20px, -10px, 0); border-radius: 60% 40% 60% 40% / 100% 100% 0% 0%; }
+          100% { transform: rotate(360deg) scale(1) translate3d(0, 0, 0); border-radius: 40% 60% 50% 50% / 100% 100% 0% 0%; }
+        }
+
+        @keyframes css-float {
+          0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.5; }
+          50% { transform: translateY(-30px) rotate(2deg); opacity: 0.9; }
+        }
+      `}</style>
+    </div>
   )
 }
 
