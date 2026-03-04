@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 
 
 def seed_builtin_examples():
-    from backend.rag.knowledge_base import add_example, examples_count
-    from backend.rag.seed_data import PHYSICS_EXAMPLES
+    from rag.knowledge_base import add_example, examples_count
+    from rag.seed_data import PHYSICS_EXAMPLES
 
     logger.info("Seeding %d built-in physics examples...", len(PHYSICS_EXAMPLES))
     before = examples_count()
@@ -87,7 +87,7 @@ Output only code, no backticks."""
 
 
 def seed_videos(video_folder: str):
-    from backend.rag.knowledge_base import add_example
+    from rag.knowledge_base import add_example
 
     folder = Path(video_folder)
     if not folder.exists():
@@ -148,7 +148,7 @@ def main():
     args = parser.parse_args()
 
     if args.clear:
-        from backend.rag.knowledge_base import _get_client
+        from rag.knowledge_base import _get_client
         c = _get_client()
         try:
             c.delete_collection("physics_examples")
@@ -161,7 +161,7 @@ def main():
     if args.videos:
         seed_videos(args.videos)
 
-    from backend.rag.knowledge_base import examples_count
+    from rag.knowledge_base import examples_count
     print(f"\nFinal knowledge base: {examples_count()} examples.")
 
 

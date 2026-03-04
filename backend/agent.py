@@ -1769,7 +1769,7 @@ def generate_template_manim_code(question: str, params: dict | None = None) -> s
 def _build_few_shot_section(question: str) -> str:
     """Retrieve similar physics examples from the RAG knowledge base and format as few-shot context."""
     try:
-        from backend.rag.knowledge_base import query_examples
+        from rag.knowledge_base import query_examples
         examples = query_examples(question, n_results=3)
         if not examples:
             return ""

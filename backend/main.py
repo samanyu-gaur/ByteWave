@@ -14,7 +14,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from pydantic import BaseModel, Field
 from pathlib import Path
 
-from backend.agent import (
+from agent import (
     generate_animation_plan,
     generate_manim_code,
     generate_plan_and_code,
@@ -26,8 +26,8 @@ from backend.agent import (
     _extract_numeric_params,
     generate_matter_scene,
 )
-from backend.manim_runner import run_manim_script, ManimExecutionError
-import backend.learn as _learn
+from manim_runner import run_manim_script, ManimExecutionError
+import learn as _learn
 
 logging.basicConfig(
     level=logging.INFO,
@@ -662,7 +662,7 @@ async def followup(request: FollowupRequest):
 async def rag_stats():
     """Return RAG knowledge base statistics."""
     try:
-        from backend.rag.knowledge_base import examples_count, list_examples
+        from rag.knowledge_base import examples_count, list_examples
         return {
             "examples": examples_count(),
             "topics": [e["topic"] for e in list_examples()],
@@ -792,7 +792,7 @@ async def learn_submit(req: LearnSubmitRequest):
                 req.case_id, evaluation.get("remediation_concept", "")
             )
             try:
-                from backend.agent import generate_template_manim_code, match_template
+                from agent import generate_template_manim_code, match_template
                 params = _extract_numeric_params(remediation_prompt)
                 code = generate_template_manim_code(remediation_prompt, params)
                 plan = f"Remediation: {req.case_id} — {evaluation.get('remediation_concept', '')}"
@@ -1307,7 +1307,7 @@ async def prerender_clips():
             results[name] = "already_exists"
             continue
         try:
-            from backend.manim_runner import run_manim_script
+            from manim_runner import run_manim_script
             video_path = await asyncio.get_event_loop().run_in_executor(
                 _executor, run_manim_script, script, "low"
             )
